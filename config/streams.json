@@ -1,0 +1,16 @@
+{
+  "streams": [
+    {
+      "name": "sfro_allsky",
+      "url": "https://zyssufjepmbhqznfuwcw.supabase.co/storage/v1/object/public/status-assets-public/building-0009/allsky/images/image.jpg",
+      "update_frequency": 10,
+      "enabled": true
+    },
+    {
+      "name": "sfro_bldg_2",
+      "url": "https://zyssufjepmbhqznfuwcw.supabase.co/storage/v1/object/public/status-assets-public/building-0002/allsky/images/image.jpg", 
+      "update_frequency": 30,
+      "enabled": true
+    }
+  ]
+}
