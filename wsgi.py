@@ -1,6 +1,18 @@
-from app import create_app
+#!/var/www/tools/tractools/venv/bin/python3
+import sys
+import os
 
-application = create_app()
+# Add project directory to Python path
+sys.path.insert(0, '/var/www/tools/tractools')
+
+# Change to application directory
+os.chdir('/var/www/tools/tractools')
+
+# Set environment variables
+os.environ['FLASK_ENV'] = 'production'
+
+# Import the Flask application
+from app import app as application
 
 if __name__ == "__main__":
     application.run()
