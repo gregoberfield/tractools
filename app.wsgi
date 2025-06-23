@@ -1,41 +1,53 @@
 #!/var/www/tools/tractools/venv/bin/python3
 import sys
 import os
-import site
 
-# Path to the virtual environment
-venv_path = '/var/www/tools/tractools/.venv'
-
-# Add the virtual environment's site-packages to Python path
-# This replaces the deprecated activate_this.py approach
-venv_site_packages = os.path.join(venv_path, 'lib', 'python{}.{}'.format(
-    sys.version_info.major, sys.version_info.minor), 'site-packages')
-
-if os.path.exists(venv_site_packages):
-    site.addsitedir(venv_site_packages)
-
-# Add your project directory to the sys.path
-project_path = "/var/www/tools/tractools"
-if project_path not in sys.path:
-    sys.path.insert(0, project_path)
-
-# Set environment variables
+# Add project directory to Python path
+sys.path.insert(0, '/var/www/tools/tractools')
+os.chdir('/var/www/tools/tractools')
 os.environ['FLASK_ENV'] = 'production'
-os.environ['FLASK_APP'] = 'app.py'
 
-# Change to the application directory to ensure relative paths work correctly
-os.chdir(project_path)
+# Debug function to write to a writable location
+def debug_log(message):
+    try:
+        with open('/var/www/tools/tractools/debug.log', 'a') as f:
+            f.write(f"{message}\n")
+    except:
+        pass
 
 try:
-    # Import the Flask application
-    from app import app as application
-except ImportError as e:
-    # Log the error for debugging
+    # Import the app module first
+    import app
+    debug_log(f"App module imported successfully")
+    debug_log(f"Available attributes in app: {dir(app)}")
+    
+    # Try different common Flask app names
+    if hasattr(app, 'app'):
+        application = app.app
+        debug_log("Found Flask app as 'app.app'")
+    elif hasattr(app, 'application'):
+        application = app.application
+        debug_log("Found Flask app as 'app.application'")
+    elif hasattr(app, 'create_app'):
+        application = app.create_app()
+        debug_log("Found Flask app factory 'app.create_app()'")
+    else:
+        # Look for any Flask instances
+        from flask import Flask
+        flask_apps = [getattr(app, attr) for attr in dir(app) 
+                     if isinstance(getattr(app, attr, None), Flask)]
+        if flask_apps:
+            application = flask_apps[0]
+            debug_log(f"Found Flask app: {flask_apps[0]}")
+        else:
+            debug_log("No Flask app found!")
+            raise ImportError("No Flask application found in app module")
+
+except Exception as e:
+    debug_log(f"Error importing app: {e}")
+    debug_log(f"Python path: {sys.path}")
     import traceback
-    with open('/var/log/apache2/tractools_import_error.log', 'a') as f:
-        f.write(f"Import error: {e}\n")
-        f.write(f"Python path: {sys.path}\n")
-        f.write(f"Traceback: {traceback.format_exc()}\n")
+    debug_log(f"Traceback: {traceback.format_exc()}")
     raise
 
 if __name__ == "__main__":
