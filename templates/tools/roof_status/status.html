@@ -124,7 +124,7 @@
                     <div class="col-md-6">
                         <p><strong>Last Update:</strong> 
                             {% if status_data.last_update %}
-                                <span class="text-muted">{{ status_data.last_update }}</span>
+                                <span class="text-muted timestamp" data-utc="{{ status_data.last_update }}">{{ status_data.last_update }}</span>
                             {% else %}
                                 <span class="text-muted">No updates yet</span>
                             {% endif %}
@@ -180,7 +180,9 @@
                                     <code class="small">{{ status.file_path }}</code>
                                 </td>
                                 <td>
-                                    <span class="text-muted">{{ status.last_updated_display }}</span>
+                                    <span class="text-muted timestamp" data-utc="{{ status.last_updated_utc }}">
+                                        {{ status.last_updated }}
+                                    </span>
                                 </td>
                                 <td>
                                     <a href="/tools/roof-status/building/{{ status.building_id }}" 
@@ -272,6 +274,46 @@
 function refreshData() {
     location.reload();
 }
+
+// Function to convert UTC timestamps to local timezone
+function convertTimestampsToLocal() {
+    const timestampElements = document.querySelectorAll('.timestamp[data-utc]');
+    
+    timestampElements.forEach(element => {
+        const utcTimestamp = element.getAttribute('data-utc');
+        if (utcTimestamp) {
+            try {
+                const utcDate = new Date(utcTimestamp);
+                
+                // Format as local date and time
+                const localDateTimeString = utcDate.toLocaleString(undefined, {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                
+                // Update the element content
+                element.textContent = localDateTimeString;
+                
+                // Add timezone info as title for hover
+                const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                element.title = `${localDateTimeString} (${timezoneName})`;
+                
+            } catch (error) {
+                console.error('Error converting timestamp:', error);
+                // Fallback to original timestamp if conversion fails
+                element.textContent = utcTimestamp;
+            }
+        }
+    });
+}
+
+// Convert timestamps when page loads
+document.addEventListener('DOMContentLoaded', convertTimestampsToLocal);
 
 // Auto-refresh every 30 seconds
 setInterval(function() {

@@ -2,7 +2,7 @@ import threading
 import re
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 import logging
 
@@ -58,15 +58,16 @@ class RoofStatusTool:
                 'message': 'Could not extract building identifier from file path'
             }
         
-        timestamp = datetime.now()
+        # Use UTC timestamp with timezone information
+        timestamp_utc = datetime.now(timezone.utc)
         
         with self.lock:
             self.roof_statuses[building_id] = {
                 'building_id': building_id,
                 'file_path': file_path,
                 'found': found,
-                'last_updated': timestamp.isoformat(),
-                'last_updated_display': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'last_updated': timestamp_utc.isoformat(),
+                'last_updated_utc': timestamp_utc.isoformat(),  # Explicit UTC timestamp for client-side conversion
                 'status': 'open' if found else 'closed',
                 'status_display': 'OPEN' if found else 'CLOSED'
             }
@@ -126,6 +127,14 @@ class RoofStatusTool:
                 with open(self.data_file, 'r') as f:
                     data = json.load(f)
                     self.roof_statuses = data.get('roof_statuses', {})
+                    
+                    # Ensure backward compatibility - add last_updated_utc field if missing
+                    for building_id, status in self.roof_statuses.items():
+                        if 'last_updated_utc' not in status and 'last_updated' in status:
+                            # If we have last_updated but not last_updated_utc, use the existing timestamp
+                            # This assumes the existing timestamp is already in a reasonable format
+                            status['last_updated_utc'] = status['last_updated']
+                    
                     logger.info(f"Loaded {len(self.roof_statuses)} roof status entries from {self.data_file}")
             else:
                 logger.info(f"No existing data file found at {self.data_file}, starting with empty data")
@@ -141,7 +150,7 @@ class RoofStatusTool:
             
             data = {
                 'roof_statuses': self.roof_statuses,
-                'last_saved': datetime.now().isoformat()
+                'last_saved': datetime.now(timezone.utc).isoformat()
             }
             
             with open(self.data_file, 'w') as f:

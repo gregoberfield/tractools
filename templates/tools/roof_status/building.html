@@ -90,9 +90,11 @@
                         <strong>Last Updated:</strong>
                     </div>
                     <div class="col-sm-8">
-                        <span class="text-muted">{{ building_data.last_updated_display }}</span>
+                        <span class="text-muted timestamp" data-utc="{{ building_data.last_updated_utc }}">
+                            {{ building_data.last_updated }}
+                        </span>
                         <br>
-                        <small class="text-muted">{{ building_data.last_updated }}</small>
+                        <small class="text-muted">UTC: {{ building_data.last_updated }}</small>
                     </div>
                 </div>
             </div>
@@ -137,7 +139,9 @@
                         <div class="timeline-marker bg-primary"></div>
                         <div class="timeline-content">
                             <h6 class="timeline-title">Latest Update</h6>
-                            <p class="timeline-text">{{ building_data.last_updated_display }}</p>
+                            <p class="timeline-text timestamp" data-utc="{{ building_data.last_updated_utc }}">
+                                {{ building_data.last_updated }}
+                            </p>
                             <small class="text-muted">
                                 Status: {{ "OPEN" if building_data.found else "CLOSED" }}
                             </small>
@@ -261,5 +265,45 @@
 function refreshData() {
     location.reload();
 }
+
+// Function to convert UTC timestamps to local timezone
+function convertTimestampsToLocal() {
+    const timestampElements = document.querySelectorAll('.timestamp[data-utc]');
+    
+    timestampElements.forEach(element => {
+        const utcTimestamp = element.getAttribute('data-utc');
+        if (utcTimestamp) {
+            try {
+                const utcDate = new Date(utcTimestamp);
+                
+                // Format as local date and time
+                const localDateTimeString = utcDate.toLocaleString(undefined, {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                
+                // Update the element content
+                element.textContent = localDateTimeString;
+                
+                // Add timezone info as title for hover
+                const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                element.title = `${localDateTimeString} (${timezoneName})`;
+                
+            } catch (error) {
+                console.error('Error converting timestamp:', error);
+                // Fallback to original timestamp if conversion fails
+                element.textContent = utcTimestamp;
+            }
+        }
+    });
+}
+
+// Convert timestamps when page loads
+document.addEventListener('DOMContentLoaded', convertTimestampsToLocal);
 </script>
 {% endblock %}
