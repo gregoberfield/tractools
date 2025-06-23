@@ -90,17 +90,68 @@ class RoofStatusTool:
         self._load_data()
         
         with self.lock:
+            # Add outdated status to each building
+            current_time = datetime.now(timezone.utc)
+            statuses_with_outdated = {}
+            
+            for building_id, status in self.roof_statuses.items():
+                status_copy = dict(status)
+                
+                # Check if status is outdated (older than 30 minutes)
+                try:
+                    last_updated = datetime.fromisoformat(status['last_updated'].replace('Z', '+00:00'))
+                    if last_updated.tzinfo is None:
+                        # Assume UTC if no timezone info
+                        last_updated = last_updated.replace(tzinfo=timezone.utc)
+                    
+                    time_diff = current_time - last_updated
+                    is_outdated = time_diff.total_seconds() > 1800  # 30 minutes = 1800 seconds
+                    
+                    status_copy['is_outdated'] = is_outdated
+                    status_copy['minutes_since_update'] = int(time_diff.total_seconds() / 60)
+                    
+                except (ValueError, KeyError) as e:
+                    logger.warning(f"Error parsing timestamp for {building_id}: {e}")
+                    status_copy['is_outdated'] = False
+                    status_copy['minutes_since_update'] = 0
+                
+                statuses_with_outdated[building_id] = status_copy
+            
             return {
                 'service_running': self.running,
                 'total_buildings': len(self.roof_statuses),
                 'last_update': max([status['last_updated'] for status in self.roof_statuses.values()]) if self.roof_statuses else None,
-                'statuses': dict(self.roof_statuses)
+                'statuses': statuses_with_outdated
             }
             
     def get_building_status(self, building_id: str) -> Optional[Dict[str, Any]]:
         """Get status for a specific building"""
         with self.lock:
-            return self.roof_statuses.get(building_id)
+            status = self.roof_statuses.get(building_id)
+            if status:
+                status_copy = dict(status)
+                
+                # Add outdated status check
+                current_time = datetime.now(timezone.utc)
+                try:
+                    last_updated = datetime.fromisoformat(status['last_updated'].replace('Z', '+00:00'))
+                    if last_updated.tzinfo is None:
+                        # Assume UTC if no timezone info
+                        last_updated = last_updated.replace(tzinfo=timezone.utc)
+                    
+                    time_diff = current_time - last_updated
+                    is_outdated = time_diff.total_seconds() > 1800  # 30 minutes = 1800 seconds
+                    
+                    status_copy['is_outdated'] = is_outdated
+                    status_copy['minutes_since_update'] = int(time_diff.total_seconds() / 60)
+                    
+                except (ValueError, KeyError) as e:
+                    logger.warning(f"Error parsing timestamp for {building_id}: {e}")
+                    status_copy['is_outdated'] = False
+                    status_copy['minutes_since_update'] = 0
+                
+                return status_copy
+            return None
             
     def get_summary_stats(self) -> Dict[str, Any]:
         """Get summary statistics"""

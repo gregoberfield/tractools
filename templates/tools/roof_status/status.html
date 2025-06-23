@@ -161,7 +161,7 @@
                         </thead>
                         <tbody>
                             {% for building_id, status in status_data.statuses.items() %}
-                            <tr>
+                            <tr{% if status.is_outdated %} class="table-warning-light"{% endif %}>
                                 <td>
                                     <strong>{{ status.building_id }}</strong>
                                 </td>
@@ -175,6 +175,11 @@
                                             <i class="bi bi-door-closed"></i> CLOSED
                                         </span>
                                     {% endif %}
+                                    {% if status.is_outdated %}
+                                        <br><small class="badge bg-warning text-dark mt-1">
+                                            <i class="bi bi-exclamation-triangle"></i> Outdated
+                                        </small>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <code class="small">{{ status.file_path }}</code>
@@ -183,6 +188,11 @@
                                     <span class="text-muted timestamp" data-utc="{{ status.last_updated_utc }}">
                                         {{ status.last_updated }}
                                     </span>
+                                    {% if status.is_outdated %}
+                                        <br><small class="text-warning">
+                                            <i class="bi bi-clock"></i> {{ status.minutes_since_update }} min ago
+                                        </small>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <a href="/tools/roof-status/building/{{ status.building_id }}" 
@@ -265,6 +275,15 @@
     
     pre code {
         font-size: 0.8em;
+    }
+    
+    /* Light red background for outdated rows */
+    .table-warning-light {
+        background-color: rgba(255, 193, 7, 0.15) !important;
+    }
+    
+    .table-warning-light:hover {
+        background-color: rgba(255, 193, 7, 0.25) !important;
     }
 </style>
 {% endblock %}
