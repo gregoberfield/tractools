@@ -33,6 +33,28 @@
         </div>
     </div>
     
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card tool-card h-100" onclick="window.location.href='/tools/roof-status/status'">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">
+                        <i class="bi bi-house-check text-success"></i>
+                        Roof Status Monitor
+                    </h5>
+                    <span class="badge bg-success status-badge">Active</span>
+                </div>
+                <p class="card-text">
+                    Monitors roof status file submissions via REST API. Tracks building status updates
+                    and provides a dashboard for viewing current status across all buildings.
+                </p>
+                <div class="d-flex justify-content-between">
+                    <a href="/tools/roof-status/status" class="btn btn-success btn-sm">View Status</a>
+                    <span class="btn btn-outline-secondary btn-sm disabled">API Endpoint</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Placeholder for future tools -->
     <div class="col-md-6 col-lg-4 mb-4">
         <div class="card tool-card h-100 border-dashed" style="border-style: dashed !important;">
@@ -50,13 +72,27 @@
 <div class="row mt-5">
     <div class="col-12">
         <h3>Quick Start</h3>
-        <div class="alert alert-info">
-            <h6>Getting Started with Image Streaming:</h6>
-            <ol class="mb-0">
-                <li>Configure your image sources in <code>config/streams.json</code></li>
-                <li>Start the application and visit the <a href="/tools/image-streamer/status">Stream Status</a> page</li>
-                <li>Access your RTSP streams at <code>rtsp://localhost:8554/{stream_name}</code></li>
-            </ol>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h6>Getting Started with Image Streaming:</h6>
+                    <ol class="mb-0">
+                        <li>Configure your image sources in <code>config/streams.json</code></li>
+                        <li>Start the application and visit the <a href="/tools/image-streamer/status">Stream Status</a> page</li>
+                        <li>Access your RTSP streams at <code>rtsp://localhost:8554/{stream_name}</code></li>
+                    </ol>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-success">
+                    <h6>Getting Started with Roof Status Monitor:</h6>
+                    <ol class="mb-0">
+                        <li>Visit the <a href="/tools/roof-status/status">Roof Status</a> page to view the dashboard</li>
+                        <li>Submit status updates via POST to <code>/tools/roof-status/api/sfro-roof-status</code></li>
+                        <li>Monitor building status updates in real-time</li>
+                    </ol>
+                </div>
+            </div>
         </div>
     </div>
 </div>

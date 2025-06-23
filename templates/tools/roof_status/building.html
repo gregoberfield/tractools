@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Building Details - Roof Status{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5">
+                <i class="bi bi-building text-primary"></i>
+                Building Details
+            </h1>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <a href="/tools/roof-status/status" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Status
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if error %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-danger">
+            <h5><i class="bi bi-exclamation-triangle"></i> Error</h5>
+            <p class="mb-0">{{ error }}</p>
+            {% if building_id %}
+            <p class="mb-0 mt-2"><strong>Building ID:</strong> {{ building_id }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if building_data %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Building Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <strong>Building ID:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="badge bg-primary fs-6">{{ building_data.building_id }}</span>
+                    </div>
+                </div>
+                <hr>
+                
+                <div class="row">
+                    <div class="col-sm-4">
+                        <strong>File Status:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        {% if building_data.found %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle"></i> Found
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning fs-6">
+                                <i class="bi bi-x-circle"></i> Not Found
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                
+                <div class="row">
+                    <div class="col-sm-4">
+                        <strong>File Path:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <code class="small">{{ building_data.file_path }}</code>
+                    </div>
+                </div>
+                <hr>
+                
+                <div class="row">
+                    <div class="col-sm-4">
+                        <strong>Last Updated:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="text-muted">{{ building_data.last_updated_display }}</span>
+                        <br>
+                        <small class="text-muted">{{ building_data.last_updated }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Status Summary
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if building_data.found %}
+                    <div class="text-success mb-3">
+                        <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="text-success">File Found</h5>
+                    <p class="text-muted">The roof status file was successfully located at the specified path.</p>
+                {% else %}
+                    <div class="text-warning mb-3">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="text-warning">File Not Found</h5>
+                    <p class="text-muted">The roof status file could not be located at the specified path.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock"></i>
+                    Update History
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Latest Update</h6>
+                            <p class="timeline-text">{{ building_data.last_updated_display }}</p>
+                            <small class="text-muted">
+                                Status: {{ "Found" if building_data.found else "Not Found" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Path Analysis -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-folder"></i>
+                    File Path Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Full Path:</h6>
+                        <div class="bg-light p-3 rounded">
+                            <code>{{ building_data.file_path }}</code>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Path Components:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% set path_parts = building_data.file_path.replace('\\', '/').split('/') %}
+                            {% for part in path_parts %}
+                                {% if part %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ part }}</span>
+                                    {% if 'building-' in part.lower() %}
+                                        <span class="badge bg-primary rounded-pill">Building ID</span>
+                                    {% elif part.lower() == 'roof' %}
+                                        <span class="badge bg-secondary rounded-pill">Root Dir</span>
+                                    {% elif part.endswith('.txt') %}
+                                        <span class="badge bg-info rounded-pill">File</span>
+                                    {% elif ':' in part %}
+                                        <span class="badge bg-warning rounded-pill">Drive</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark rounded-pill">Directory</span>
+                                    {% endif %}
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -35px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #007bff;
+    }
+    
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid #007bff;
+    }
+    
+    .timeline-title {
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .timeline-text {
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+    }
+    
+    code {
+        font-size: 0.875em;
+    }
+    
+    .fs-6 {
+        font-size: 1rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refreshData() {
+    location.reload();
+}
+</script>
+{% endblock %}

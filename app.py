@@ -19,7 +19,9 @@ def create_app():
     
     # Register tool blueprints
     from tools.image_streamer import image_streamer_bp
+    from tools.roof_status import roof_status_bp
     app.register_blueprint(image_streamer_bp, url_prefix='/tools/image-streamer')
+    app.register_blueprint(roof_status_bp, url_prefix='/tools/roof-status')
     
     # Main application routes
     @app.route('/')
@@ -32,7 +34,7 @@ def create_app():
         """Health check endpoint for load balancers"""
         return jsonify({
             'status': 'healthy',
-            'tools': ['image-streamer']
+            'tools': ['image-streamer', 'roof-status']
         })
     
     return app
