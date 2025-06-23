@@ -160,3 +160,33 @@ def api_get_building_status(building_id):
     except Exception as e:
         logger.error(f"Error getting building status via API for {building_id}: {e}")
         return jsonify({'error': str(e)}), 500
+
+@roof_status_bp.route('/api/debug')
+def api_debug():
+    """Debug endpoint to show raw data and file info"""
+    try:
+        service = get_service()
+        import os
+        
+        debug_info = {
+            'data_file_path': service.data_file,
+            'data_file_exists': os.path.exists(service.data_file),
+            'data_file_size': os.path.getsize(service.data_file) if os.path.exists(service.data_file) else 0,
+            'in_memory_count': len(service.roof_statuses),
+            'in_memory_keys': list(service.roof_statuses.keys()),
+            'service_running': service.running
+        }
+        
+        # Try to read the file directly
+        if os.path.exists(service.data_file):
+            try:
+                with open(service.data_file, 'r') as f:
+                    file_content = f.read()
+                    debug_info['file_content_preview'] = file_content[:500] + '...' if len(file_content) > 500 else file_content
+            except Exception as e:
+                debug_info['file_read_error'] = str(e)
+        
+        return jsonify(debug_info)
+    except Exception as e:
+        logger.error(f"Error in debug endpoint: {e}")
+        return jsonify({'error': str(e)}), 500

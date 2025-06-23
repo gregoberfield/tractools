@@ -27,6 +27,9 @@ logging.basicConfig(
 
 # Create specific logger for API requests
 api_logger = logging.getLogger('api_requests')
+api_logger.setLevel(logging.INFO)
+api_logger.propagate = False  # Don't propagate to root logger
+
 api_handler = logging.handlers.RotatingFileHandler(
     'logs/api_requests.log',
     maxBytes=10*1024*1024,  # 10MB
@@ -34,7 +37,11 @@ api_handler = logging.handlers.RotatingFileHandler(
 )
 api_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 api_logger.addHandler(api_handler)
-api_logger.setLevel(logging.INFO)
+
+# Also add console handler for API logger during development
+api_console_handler = logging.StreamHandler()
+api_console_handler.setFormatter(logging.Formatter('API: %(asctime)s - %(levelname)s - %(message)s'))
+api_logger.addHandler(api_console_handler)
 
 logger = logging.getLogger(__name__)
 

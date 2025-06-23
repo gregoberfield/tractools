@@ -1,5 +1,7 @@
 import threading
 import re
+import json
+import os
 from datetime import datetime
 from typing import Dict, Any, Optional
 import logging
@@ -13,11 +15,13 @@ class RoofStatusTool:
         self.roof_statuses: Dict[str, Dict[str, Any]] = {}
         self.lock = threading.Lock()
         self.running = False
+        self.data_file = 'logs/roof_status_data.json'
         
     def start(self):
         """Start the roof status service"""
         logger.info("Starting Roof Status Tool")
         self.running = True
+        self._load_data()
         return True
         
     def stop(self):
@@ -69,6 +73,9 @@ class RoofStatusTool:
             
         logger.info(f"Updated roof status for {building_id}: {'found' if found else 'not found'}")
         
+        # Save data to file after update
+        self._save_data()
+        
         return {
             'status': 'success',
             'message': f'Updated status for {building_id}',
@@ -78,6 +85,9 @@ class RoofStatusTool:
         
     def get_all_statuses(self) -> Dict[str, Any]:
         """Get all roof statuses"""
+        # Reload data from disk to ensure we have the latest data
+        self._load_data()
+        
         with self.lock:
             return {
                 'service_running': self.running,
@@ -108,3 +118,35 @@ class RoofStatusTool:
                 'not_found_count': closed_count,
                 'found_percentage': round((open_count / total * 100) if total > 0 else 0, 1)
             }
+    
+    def _load_data(self):
+        """Load roof status data from file"""
+        try:
+            if os.path.exists(self.data_file):
+                with open(self.data_file, 'r') as f:
+                    data = json.load(f)
+                    self.roof_statuses = data.get('roof_statuses', {})
+                    logger.info(f"Loaded {len(self.roof_statuses)} roof status entries from {self.data_file}")
+            else:
+                logger.info(f"No existing data file found at {self.data_file}, starting with empty data")
+        except Exception as e:
+            logger.error(f"Error loading data from {self.data_file}: {e}")
+            self.roof_statuses = {}
+    
+    def _save_data(self):
+        """Save roof status data to file"""
+        try:
+            # Ensure logs directory exists
+            os.makedirs(os.path.dirname(self.data_file), exist_ok=True)
+            
+            data = {
+                'roof_statuses': self.roof_statuses,
+                'last_saved': datetime.now().isoformat()
+            }
+            
+            with open(self.data_file, 'w') as f:
+                json.dump(data, f, indent=2)
+                
+            logger.info(f"Saved {len(self.roof_statuses)} roof status entries to {self.data_file}")
+        except Exception as e:
+            logger.error(f"Error saving data to {self.data_file}: {e}")
