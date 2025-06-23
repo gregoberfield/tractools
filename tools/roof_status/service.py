@@ -63,7 +63,8 @@ class RoofStatusTool:
                 'found': found,
                 'last_updated': timestamp.isoformat(),
                 'last_updated_display': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                'status': 'found' if found else 'not_found'
+                'status': 'open' if found else 'closed',
+                'status_display': 'OPEN' if found else 'CLOSED'
             }
             
         logger.info(f"Updated roof status for {building_id}: {'found' if found else 'not found'}")
@@ -94,12 +95,16 @@ class RoofStatusTool:
         """Get summary statistics"""
         with self.lock:
             total = len(self.roof_statuses)
-            found_count = sum(1 for status in self.roof_statuses.values() if status['found'])
-            not_found_count = total - found_count
+            open_count = sum(1 for status in self.roof_statuses.values() if status['found'])
+            closed_count = total - open_count
             
             return {
                 'total_buildings': total,
-                'found_count': found_count,
-                'not_found_count': not_found_count,
-                'found_percentage': round((found_count / total * 100) if total > 0 else 0, 1)
+                'open_count': open_count,
+                'closed_count': closed_count,
+                'open_percentage': round((open_count / total * 100) if total > 0 else 0, 1),
+                # Keep legacy fields for backward compatibility
+                'found_count': open_count,
+                'not_found_count': closed_count,
+                'found_percentage': round((open_count / total * 100) if total > 0 else 0, 1)
             }

@@ -59,16 +59,16 @@
                 
                 <div class="row">
                     <div class="col-sm-4">
-                        <strong>File Status:</strong>
+                        <strong>Roof Status:</strong>
                     </div>
                     <div class="col-sm-8">
                         {% if building_data.found %}
                             <span class="badge bg-success fs-6">
-                                <i class="bi bi-check-circle"></i> Found
+                                <i class="bi bi-door-open"></i> OPEN
                             </span>
                         {% else %}
-                            <span class="badge bg-warning fs-6">
-                                <i class="bi bi-x-circle"></i> Not Found
+                            <span class="badge bg-danger fs-6">
+                                <i class="bi bi-door-closed"></i> CLOSED
                             </span>
                         {% endif %}
                     </div>
@@ -110,16 +110,16 @@
             <div class="card-body text-center">
                 {% if building_data.found %}
                     <div class="text-success mb-3">
-                        <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                        <i class="bi bi-door-open-fill" style="font-size: 3rem;"></i>
                     </div>
-                    <h5 class="text-success">File Found</h5>
-                    <p class="text-muted">The roof status file was successfully located at the specified path.</p>
+                    <h5 class="text-success">Roof Open</h5>
+                    <p class="text-muted">The roof status indicates the roof is currently open.</p>
                 {% else %}
-                    <div class="text-warning mb-3">
-                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                    <div class="text-danger mb-3">
+                        <i class="bi bi-door-closed-fill" style="font-size: 3rem;"></i>
                     </div>
-                    <h5 class="text-warning">File Not Found</h5>
-                    <p class="text-muted">The roof status file could not be located at the specified path.</p>
+                    <h5 class="text-danger">Roof Closed</h5>
+                    <p class="text-muted">The roof status indicates the roof is currently closed.</p>
                 {% endif %}
             </div>
         </div>
@@ -139,7 +139,7 @@
                             <h6 class="timeline-title">Latest Update</h6>
                             <p class="timeline-text">{{ building_data.last_updated_display }}</p>
                             <small class="text-muted">
-                                Status: {{ "Found" if building_data.found else "Not Found" }}
+                                Status: {{ "OPEN" if building_data.found else "CLOSED" }}
                             </small>
                         </div>
                     </div>

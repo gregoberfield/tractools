@@ -56,11 +56,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ summary_stats.found_count }}</h4>
-                        <p class="card-text">Files Found</p>
+                        <h4 class="card-title">{{ summary_stats.open_count }}</h4>
+                        <p class="card-text">Roofs Open</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                        <i class="bi bi-door-open" style="font-size: 2rem;"></i>
                     </div>
                 </div>
             </div>
@@ -68,15 +68,15 @@
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-warning text-white">
+        <div class="card bg-danger text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ summary_stats.not_found_count }}</h4>
-                        <p class="card-text">Files Missing</p>
+                        <h4 class="card-title">{{ summary_stats.closed_count }}</h4>
+                        <p class="card-text">Roofs Closed</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-x-circle" style="font-size: 2rem;"></i>
+                        <i class="bi bi-door-closed" style="font-size: 2rem;"></i>
                     </div>
                 </div>
             </div>
@@ -88,8 +88,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title">{{ summary_stats.found_percentage }}%</h4>
-                        <p class="card-text">Success Rate</p>
+                        <h4 class="card-title">{{ summary_stats.open_percentage }}%</h4>
+                        <p class="card-text">Open Rate</p>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
@@ -168,11 +168,11 @@
                                 <td>
                                     {% if status.found %}
                                         <span class="badge bg-success">
-                                            <i class="bi bi-check-circle"></i> Found
+                                            <i class="bi bi-door-open"></i> OPEN
                                         </span>
                                     {% else %}
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-x-circle"></i> Not Found
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-door-closed"></i> CLOSED
                                         </span>
                                     {% endif %}
                                 </td>
