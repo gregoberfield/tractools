@@ -229,13 +229,19 @@
     const historicalData = {{ historical_data | tojson | safe }};
     
     // Prepare data for charts
-    const chartData = historicalData.map(item => ({
-        timestamp: new Date(item.created_at),
-        temperature: item.temperature_f,
-        humidity: item.humidity_percent,
-        windSpeed: item.wind_speed_mph,
-        skyTemperature: item.sky_temperature_f
-    })).reverse(); // Reverse to show oldest to newest
+    const chartData = historicalData.map(item => {
+        // Convert UTC timestamp to local time
+        const utcDate = new Date(item.created_at);
+        const localDate = new Date(utcDate.getTime() - (utcDate.getTimezoneOffset() * 60000));
+        
+        return {
+            timestamp: localDate,
+            temperature: item.temperature_f,
+            humidity: item.humidity_percent,
+            windSpeed: item.wind_speed_mph,
+            skyTemperature: item.sky_temperature_f
+        };
+    }).reverse(); // Reverse to show oldest to newest
     
     const labels = chartData.map(item => item.timestamp.toLocaleTimeString());
     
