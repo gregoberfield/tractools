@@ -26,7 +26,7 @@ def get_status():
         else:
             return render_template('tools/weather/status.html', 
                                  current_weather=latest_weather if latest_weather else None,
-                                 historical_data=historical_data)
+                                 historical_data=[data.to_dict() for data in historical_data])
     except Exception as e:
         logger.error(f"Error getting weather status: {e}")
         if request.headers.get('Accept') == 'application/json':
