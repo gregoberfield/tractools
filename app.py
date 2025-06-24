@@ -50,6 +50,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
     
+    # Set the database URI from the property
+    from config import Config
+    config_instance = Config()
+    app.config['SQLALCHEMY_DATABASE_URI'] = config_instance.SQLALCHEMY_DATABASE_URI
+    
     # Initialize database
     from tools.weather.models import db
     db.init_app(app)
