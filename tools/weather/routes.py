@@ -57,10 +57,9 @@ def update_weather_data():
         
         required_fields = [
             'date', 'time', 'temperature_f', 'humidity_percent', 'dew_point_f',
-            'barometer_mb', 'wind_speed_mph', 'wind_direction_degrees',
-            'rain_rate_mm_per_hour', 'sky_temperature_f', 'sky_condition',
-            'wind_condition', 'rain_condition', 'daylight_condition',
-            'roof_close_requested', 'alert_condition'
+            'wind_speed_mph', 'rain_rate_mm_per_hour', 'sky_temperature_f', 
+            'sky_condition', 'wind_condition', 'rain_condition', 
+            'daylight_condition', 'roof_close_requested', 'alert_condition'
         ]
         
         for field in required_fields:
@@ -89,9 +88,9 @@ def update_weather_data():
             temperature_f=data['temperature_f'],
             humidity_percent=data['humidity_percent'],
             dew_point_f=data['dew_point_f'],
-            barometer_mb=data['barometer_mb'],
+            barometer_mb=data.get('barometer_mb', 0.0),
             wind_speed_mph=data['wind_speed_mph'],
-            wind_direction_degrees=data['wind_direction_degrees'],
+            wind_direction_degrees=data.get('wind_direction_degrees', 0.0),
             rain_rate_mm_per_hour=data['rain_rate_mm_per_hour'],
             sky_temperature_f=data['sky_temperature_f'],
             sky_condition=data['sky_condition'],
