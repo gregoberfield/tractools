@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Status - WebTools Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+    .weather-card { 
+        border-left: 4px solid #007bff; 
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    .metric-card { 
+        transition: transform 0.2s; 
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background: #fff;
+    }
+    .metric-card:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .metric-value { 
+        font-size: 1.5rem; 
+        font-weight: bold; 
+        color: #007bff; 
+    }
+    .metric-label { 
+        font-size: 0.875rem; 
+        color: #6c757d; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+    }
+    .alert-normal { background-color: #d4edda; color: #155724; }
+    .alert-warning { background-color: #fff3cd; color: #856404; }
+    .alert-critical { background-color: #f8d7da; color: #721c24; }
+    .chart-container { 
+        height: 300px; 
+        background: #f8f9fa; 
+        border: 1px solid #dee2e6; 
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .last-updated { 
+        font-size: 0.875rem; 
+        color: #6c757d; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-cloud-sun me-2"></i>Weather Status
+        </h1>
+    </div>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Error:</strong> {{ error }}
+    </div>
+{% elif not current_weather %}
+    <div class="alert alert-warning" role="alert">
+        <strong>No Data:</strong> No weather data available yet.
+    </div>
+{% else %}
+    <!-- Current Weather Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card weather-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Current Weather Conditions</h5>
+                    <span class="last-updated">
+                        Last Updated: {{ current_weather.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.temperature_c) }}°C</div>
+                                <div class="metric-label">Temperature</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.humidity_percent) }}%</div>
+                                <div class="metric-label">Humidity</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.barometer_mb) }}</div>
+                                <div class="metric-label">Pressure (mb)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.wind_speed_kph) }}</div>
+                                <div class="metric-label">Wind (kph)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.dew_point_c) }}°C</div>
+                                <div class="metric-label">Dew Point</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ current_weather.wind_direction_degrees|int }}°</div>
+                                <div class="metric-label">Wind Direction</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.rain_rate_mm_per_hour) }}</div>
+                                <div class="metric-label">Rain Rate (mm/h)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-card p-3 text-center">
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.sky_temperature_c) }}°C</div>
+                                <div class="metric-label">Sky Temperature</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conditions Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Current Conditions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <strong>Sky:</strong> {{ current_weather.sky_condition }}
+                        </div>
+                        <div class="col-6 mb-2">
+                            <strong>Wind:</strong> {{ current_weather.wind_condition }}
+                        </div>
+                        <div class="col-6 mb-2">
+                            <strong>Rain:</strong> {{ current_weather.rain_condition }}
+                        </div>
+                        <div class="col-6 mb-2">
+                            <strong>Daylight:</strong> {{ current_weather.daylight_condition }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">System Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Alert Level:</strong>
+                        <span class="badge 
+                            {% if current_weather.alert_condition == 'Normal' %}alert-normal
+                            {% elif current_weather.alert_condition == 'Warning' %}alert-warning
+                            {% else %}alert-critical{% endif %}">
+                            {{ current_weather.alert_condition }}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Roof Close Requested:</strong>
+                        <span class="badge {% if current_weather.roof_close_requested %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {% if current_weather.roof_close_requested %}YES{% else %}NO{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Data Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">24-Hour Historical Data</h6>
+                </div>
+                <div class="card-body">
+                    {% if historical_data %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6>Temperature Trend</h6>
+                                <div class="chart-container">
+                                    <p class="text-muted">Chart placeholder - Temperature over last 24 hours</p>
+                                    <small class="text-muted">{{ historical_data|length }} data points available</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6>Humidity Trend</h6>
+                                <div class="chart-container">
+                                    <p class="text-muted">Chart placeholder - Humidity over last 24 hours</p>
+                                    <small class="text-muted">{{ historical_data|length }} data points available</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6>Pressure Trend</h6>
+                                <div class="chart-container">
+                                    <p class="text-muted">Chart placeholder - Pressure over last 24 hours</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6>Wind Speed Trend</h6>
+                                <div class="chart-container">
+                                    <p class="text-muted">Chart placeholder - Wind Speed over last 24 hours</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No historical data available for charting.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh page every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+    
+    // Add timestamp to show when page was loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Weather status page loaded at:', new Date().toISOString());
+    });
+</script>
+{% endblock %}
