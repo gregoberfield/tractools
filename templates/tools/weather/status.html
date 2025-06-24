@@ -73,14 +73,14 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Current Weather Conditions</h5>
                     <span class="last-updated">
-                        Last Updated: {{ current_weather.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                        Last Updated: {{ current_weather.date }} {{ current_weather.time }}
                     </span>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <div class="metric-card p-3 text-center">
-                                <div class="metric-value">{{ "%.1f"|format(current_weather.temperature_c) }}°C</div>
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.temperature_f) }}°F</div>
                                 <div class="metric-label">Temperature</div>
                             </div>
                         </div>
@@ -98,8 +98,8 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <div class="metric-card p-3 text-center">
-                                <div class="metric-value">{{ "%.1f"|format(current_weather.wind_speed_kph) }}</div>
-                                <div class="metric-label">Wind (kph)</div>
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.wind_speed_mph) }}</div>
+                                <div class="metric-label">Wind (mph)</div>
                             </div>
                         </div>
                     </div>
@@ -107,7 +107,7 @@
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <div class="metric-card p-3 text-center">
-                                <div class="metric-value">{{ "%.1f"|format(current_weather.dew_point_c) }}°C</div>
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.dew_point_f) }}°F</div>
                                 <div class="metric-label">Dew Point</div>
                             </div>
                         </div>
@@ -125,7 +125,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <div class="metric-card p-3 text-center">
-                                <div class="metric-value">{{ "%.1f"|format(current_weather.sky_temperature_c) }}°C</div>
+                                <div class="metric-value">{{ "%.1f"|format(current_weather.sky_temperature_f) }}°F</div>
                                 <div class="metric-label">Sky Temperature</div>
                             </div>
                         </div>

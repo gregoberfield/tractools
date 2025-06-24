@@ -15,7 +15,7 @@ def get_status():
             return jsonify(latest_weather.to_dict() if latest_weather else {})
         else:
             return render_template('tools/weather/status.html', 
-                                 weather_data=latest_weather.to_dict() if latest_weather else {})
+                                 current_weather=latest_weather if latest_weather else None)
     except Exception as e:
         logger.error(f"Error getting weather status: {e}")
         if request.headers.get('Accept') == 'application/json':
@@ -23,7 +23,7 @@ def get_status():
         else:
             return render_template('tools/weather/status.html', 
                                  error=str(e), 
-                                 weather_data={})
+                                 current_weather=None)
 
 @weather_bp.route('/api/weatherdata', methods=['POST'])
 def update_weather_data():
