@@ -55,14 +55,23 @@
         </div>
     </div>
     
-    <!-- Placeholder for future tools -->
     <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card tool-card h-100 border-dashed" style="border-style: dashed !important;">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <div class="text-muted">
-                    <i class="bi bi-plus-circle" style="font-size: 2em;"></i>
-                    <h5 class="card-title mt-3">More Tools Coming Soon</h5>
-                    <p class="card-text">Additional automation tools will be added here.</p>
+        <div class="card tool-card h-100" onclick="window.location.href='/tools/weather/status'">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">
+                        <i class="bi bi-cloud-sun text-info"></i>
+                        Weather Monitor
+                    </h5>
+                    <span class="badge bg-info status-badge">Active</span>
+                </div>
+                <p class="card-text">
+                    Collects weather data from remote site via REST API. Displays current conditions
+                    and historical trends with 24-hour data visualization.
+                </p>
+                <div class="d-flex justify-content-between">
+                    <a href="/tools/weather/status" class="btn btn-info btn-sm">View Status</a>
+                    <span class="btn btn-outline-secondary btn-sm disabled">API Endpoint</span>
                 </div>
             </div>
         </div>
@@ -90,6 +99,18 @@
                         <li>Visit the <a href="/tools/roof-status/status">Roof Status</a> page to view the dashboard</li>
                         <li>Submit status updates via POST to <code>/tools/roof-status/api/sfro-roof-status</code></li>
                         <li>Monitor building status updates in real-time</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <h6>Getting Started with Weather Monitor:</h6>
+                    <ol class="mb-0">
+                        <li>Visit the <a href="/tools/weather/status">Weather Status</a> page to view current conditions</li>
+                        <li>Submit weather data via POST to <code>/tools/weather/api/weatherdata</code></li>
+                        <li>View historical trends and graphs of the last 24 hours</li>
                     </ol>
                 </div>
             </div>

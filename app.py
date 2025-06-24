@@ -50,11 +50,20 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
     
+    # Initialize database
+    from tools.weather.models import db
+    db.init_app(app)
+    
+    with app.app_context():
+        db.create_all()
+    
     # Register tool blueprints
     from tools.image_streamer import image_streamer_bp
     from tools.roof_status import roof_status_bp
+    from tools.weather import weather_bp
     app.register_blueprint(image_streamer_bp, url_prefix='/tools/image-streamer')
     app.register_blueprint(roof_status_bp, url_prefix='/tools/roof-status')
+    app.register_blueprint(weather_bp, url_prefix='/tools/weather')
     
     # Main application routes
     @app.route('/')
@@ -67,7 +76,7 @@ def create_app():
         """Health check endpoint for load balancers"""
         return jsonify({
             'status': 'healthy',
-            'tools': ['image-streamer', 'roof-status']
+            'tools': ['image-streamer', 'roof-status', 'weather']
         })
     
     # Root-level API endpoint for external access
