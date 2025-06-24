@@ -11,11 +11,22 @@ def get_status():
     try:
         latest_weather = WeatherData.query.order_by(WeatherData.created_at.desc()).first()
         
+        # Get historical data for last 24 hours
+        from datetime import datetime, timedelta
+        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+        historical_data = WeatherData.query.filter(
+            WeatherData.created_at >= twenty_four_hours_ago
+        ).order_by(WeatherData.created_at.desc()).all()
+        
         if request.headers.get('Accept') == 'application/json':
-            return jsonify(latest_weather.to_dict() if latest_weather else {})
+            return jsonify({
+                'current_weather': latest_weather.to_dict() if latest_weather else {},
+                'historical_data': [data.to_dict() for data in historical_data]
+            })
         else:
             return render_template('tools/weather/status.html', 
-                                 current_weather=latest_weather if latest_weather else None)
+                                 current_weather=latest_weather if latest_weather else None,
+                                 historical_data=historical_data)
     except Exception as e:
         logger.error(f"Error getting weather status: {e}")
         if request.headers.get('Accept') == 'application/json':
@@ -23,7 +34,8 @@ def get_status():
         else:
             return render_template('tools/weather/status.html', 
                                  error=str(e), 
-                                 current_weather=None)
+                                 current_weather=None,
+                                 historical_data=[])
 
 @weather_bp.route('/api/weatherdata', methods=['POST'])
 def update_weather_data():
@@ -57,6 +69,19 @@ def update_weather_data():
                     'status': 'error',
                     'message': f'Missing required field: {field}'
                 }), 400
+        
+        # Check if data already exists for this date/time combination
+        existing_data = WeatherData.query.filter_by(
+            date=data['date'],
+            time=data['time']
+        ).first()
+        
+        if existing_data:
+            return jsonify({
+                'status': 'success',
+                'message': 'Weather data already exists for this date/time',
+                'id': existing_data.id
+            }), 200
         
         weather_data = WeatherData(
             date=data['date'],
