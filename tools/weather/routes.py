@@ -1,0 +1,121 @@
+from flask import Blueprint, jsonify, request, render_template
+from .models import WeatherData, db
+import logging
+
+logger = logging.getLogger(__name__)
+weather_bp = Blueprint('weather', __name__)
+
+@weather_bp.route('/status')
+def get_status():
+    """Get weather status page"""
+    try:
+        latest_weather = WeatherData.query.order_by(WeatherData.created_at.desc()).first()
+        
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(latest_weather.to_dict() if latest_weather else {})
+        else:
+            return render_template('tools/weather/status.html', 
+                                 weather_data=latest_weather.to_dict() if latest_weather else {})
+    except Exception as e:
+        logger.error(f"Error getting weather status: {e}")
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({'error': str(e)}), 500
+        else:
+            return render_template('tools/weather/status.html', 
+                                 error=str(e), 
+                                 weather_data={})
+
+@weather_bp.route('/api/weatherdata', methods=['POST'])
+def update_weather_data():
+    """API endpoint to receive weather data updates"""
+    try:
+        if not request.is_json:
+            return jsonify({
+                'status': 'error',
+                'message': 'Content-Type must be application/json'
+            }), 400
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No JSON data provided'
+            }), 400
+        
+        required_fields = [
+            'date', 'time', 'temperature_f', 'humidity_percent', 'dew_point_f',
+            'barometer_mb', 'wind_speed_mph', 'wind_direction_degrees',
+            'rain_rate_mm_per_hour', 'sky_temperature_f', 'sky_condition',
+            'wind_condition', 'rain_condition', 'daylight_condition',
+            'roof_close_requested', 'alert_condition'
+        ]
+        
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Missing required field: {field}'
+                }), 400
+        
+        weather_data = WeatherData(
+            date=data['date'],
+            time=data['time'],
+            temperature_f=data['temperature_f'],
+            humidity_percent=data['humidity_percent'],
+            dew_point_f=data['dew_point_f'],
+            barometer_mb=data['barometer_mb'],
+            wind_speed_mph=data['wind_speed_mph'],
+            wind_direction_degrees=data['wind_direction_degrees'],
+            rain_rate_mm_per_hour=data['rain_rate_mm_per_hour'],
+            sky_temperature_f=data['sky_temperature_f'],
+            sky_condition=data['sky_condition'],
+            wind_condition=data['wind_condition'],
+            rain_condition=data['rain_condition'],
+            daylight_condition=data['daylight_condition'],
+            roof_close_requested=data['roof_close_requested'],
+            alert_condition=data['alert_condition']
+        )
+        
+        db.session.add(weather_data)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Weather data updated successfully',
+            'id': weather_data.id
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Error processing weather data update: {e}")
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': f'Internal server error: {str(e)}'
+        }), 500
+
+@weather_bp.route('/api/latest')
+def api_get_latest_weather():
+    """API endpoint to get latest weather data"""
+    try:
+        latest_weather = WeatherData.query.order_by(WeatherData.created_at.desc()).first()
+        
+        if not latest_weather:
+            return jsonify({'error': 'No weather data found'}), 404
+            
+        return jsonify(latest_weather.to_dict())
+    except Exception as e:
+        logger.error(f"Error getting latest weather data: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@weather_bp.route('/api/history')
+def api_get_weather_history():
+    """API endpoint to get weather data history"""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        weather_history = WeatherData.query.order_by(WeatherData.created_at.desc()).limit(limit).all()
+        
+        return jsonify([weather.to_dict() for weather in weather_history])
+    except Exception as e:
+        logger.error(f"Error getting weather history: {e}")
+        return jsonify({'error': str(e)}), 500
