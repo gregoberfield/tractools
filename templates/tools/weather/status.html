@@ -315,43 +315,50 @@
     const astronomicalBackgroundPlugin = {
         id: 'astronomicalBackground',
         beforeDraw: (chart, args, options) => {
-            if (!astronomicalZones || astronomicalZones.length === 0) {
+            if (!astronomicalZones || astronomicalZones.length === 0 || !chartData || chartData.length === 0) {
                 return;
             }
             
             const { ctx, chartArea } = chart;
-            const xScale = chart.scales.x;
             
             ctx.save();
             
-            // Group consecutive zones of the same type
-            let currentZone = null;
-            let zoneStart = null;
+            // Get the time range of the chart data
+            const chartStartTime = chartData[0].timestamp.getTime();
+            const chartEndTime = chartData[chartData.length - 1].timestamp.getTime();
+            const chartTimeRange = chartEndTime - chartStartTime;
             
-            astronomicalZones.forEach((zone, index) => {
-                const zoneTime = new Date(zone.timestamp);
-                const timeString = zoneTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            // Process zones in groups
+            let currentZone = null;
+            let zoneStartTime = null;
+            
+            for (let i = 0; i <= astronomicalZones.length; i++) {
+                const zone = i < astronomicalZones.length ? astronomicalZones[i] : null;
+                const currentZoneType = zone ? zone.zone : null;
                 
-                if (!currentZone || currentZone !== zone.zone) {
-                    // Draw previous zone if it exists
-                    if (currentZone && zoneStart !== null) {
-                        const endX = xScale.getPixelForValue(timeString);
-                        ctx.fillStyle = astronomicalZones.find(z => z.zone === currentZone)?.color || 'rgba(0,0,0,0.1)';
-                        ctx.fillRect(zoneStart, chartArea.top, endX - zoneStart, chartArea.height);
+                if (!currentZone || currentZoneType !== currentZone) {
+                    // Draw the previous zone group
+                    if (currentZone && zoneStartTime !== null) {
+                        const endTime = zone ? zone.timestamp : astronomicalZones[astronomicalZones.length - 1].timestamp;
+                        
+                        // Calculate positions as percentages of chart width
+                        const startPercent = Math.max(0, (zoneStartTime - chartStartTime) / chartTimeRange);
+                        const endPercent = Math.min(1, (endTime - chartStartTime) / chartTimeRange);
+                        
+                        const startX = chartArea.left + (startPercent * (chartArea.right - chartArea.left));
+                        const endX = chartArea.left + (endPercent * (chartArea.right - chartArea.left));
+                        
+                        // Get color for the zone type
+                        const zoneColor = astronomicalZones.find(z => z.zone === currentZone)?.color || 'rgba(128,128,128,0.1)';
+                        
+                        ctx.fillStyle = zoneColor;
+                        ctx.fillRect(startX, chartArea.top, endX - startX, chartArea.height);
                     }
                     
-                    // Start new zone
-                    currentZone = zone.zone;
-                    zoneStart = xScale.getPixelForValue(timeString);
+                    currentZone = currentZoneType;
+                    zoneStartTime = zone ? zone.timestamp : null;
                 }
-                
-                // Handle last zone
-                if (index === astronomicalZones.length - 1) {
-                    const endX = chartArea.right;
-                    ctx.fillStyle = zone.color;
-                    ctx.fillRect(zoneStart, chartArea.top, endX - zoneStart, chartArea.height);
-                }
-            });
+            }
             
             ctx.restore();
         }
