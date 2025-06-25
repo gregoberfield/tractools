@@ -47,8 +47,12 @@ logger = logging.getLogger(__name__)
 
 def create_app():
     """Application factory pattern for Flask app creation"""
-    app = Flask(__name__)
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_object('config.Config')
+    
+    # Ensure instance directory exists
+    import os
+    os.makedirs(app.instance_path, exist_ok=True)
     
     # Set the database URI from the property
     from config import Config
@@ -70,13 +74,19 @@ def create_app():
     from flask_migrate import Migrate
     migrate = Migrate(app, db)
     
-    # Only create tables if no migration directory exists (first run)
-    import os
-    if not os.path.exists('migrations'):
-        with app.app_context():
+    # Initialize database tables and default data
+    with app.app_context():
+        # Only create all tables if no migration directory exists (first run)
+        import os
+        if not os.path.exists('migrations'):
+            logger.info("No migrations directory found, creating all tables...")
             db.create_all()
-            # Create default admin user
+        
+        # Always ensure default admin user exists (safe to call repeatedly)
+        try:
             User.create_default_admin()
+        except Exception as e:
+            logger.warning(f"Admin user creation: {e}")
     
     # Register authentication blueprint
     from auth_routes import auth_bp

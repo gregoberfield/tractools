@@ -18,8 +18,8 @@ class Config:
     DATABASE_TYPE = os.environ.get('DATABASE_TYPE', 'sqlite')  # sqlite, postgresql, mysql
     DATABASE_URL = os.environ.get('DATABASE_URL')
     
-    # SQLite (default)
-    SQLITE_DB_PATH = os.environ.get('SQLITE_DB_PATH', 'weather_data.db')
+    # SQLite (default) - store in instance directory
+    SQLITE_DB_PATH = os.environ.get('SQLITE_DB_PATH', os.path.join('instance', 'tractools.db'))
     
     # PostgreSQL
     POSTGRES_HOST = os.environ.get('POSTGRES_HOST', 'localhost')

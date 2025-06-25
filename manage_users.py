@@ -15,6 +15,8 @@ def change_admin_password():
     with app.app_context():
         print("TRACTools Admin Password Change")
         print("==============================")
+        print(f"Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
+        print()
         
         # Get username
         username = input("Admin username [admin]: ").strip() or "admin"

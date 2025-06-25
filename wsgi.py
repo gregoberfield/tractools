@@ -11,6 +11,9 @@ os.chdir('/var/www/tools/tractools')
 # Set environment variables
 os.environ['FLASK_ENV'] = 'production'
 
+# Ensure instance directory exists for database
+os.makedirs('instance', exist_ok=True)
+
 # Import the Flask application
 from app import create_app
 application = create_app()
