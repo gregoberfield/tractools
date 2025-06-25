@@ -52,10 +52,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Observatory Location Configuration for astronomical calculations
-    OBSERVATORY_LATITUDE = float(os.environ.get('OBSERVATORY_LATITUDE', 0.0))
-    OBSERVATORY_LONGITUDE = float(os.environ.get('OBSERVATORY_LONGITUDE', 0.0))
-    OBSERVATORY_ELEVATION = float(os.environ.get('OBSERVATORY_ELEVATION', 0.0))  # meters above sea level
-    OBSERVATORY_TIMEZONE = os.environ.get('OBSERVATORY_TIMEZONE', 'UTC')
+    OBSERVATORY_LATITUDE = float(os.environ.get('OBSERVATORY_LATITUDE', 31.547925))
+    OBSERVATORY_LONGITUDE = float(os.environ.get('OBSERVATORY_LONGITUDE', -99.38285))
+    OBSERVATORY_ELEVATION = float(os.environ.get('OBSERVATORY_ELEVATION', 450.0))  # meters above sea level
+    OBSERVATORY_TIMEZONE = os.environ.get('OBSERVATORY_TIMEZONE', 'America/Chicago')
     
     # Admin Authentication
     ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
