@@ -25,7 +25,7 @@ class AstronomyCalculator:
         if self.latitude == 0.0 and self.longitude == 0.0:
             logger.warning("Observatory location not configured. Using default coordinates (0,0). Please set OBSERVATORY_LATITUDE and OBSERVATORY_LONGITUDE environment variables.")
         
-        logger.info(f"Astronomy calculator initialized for location: {self.latitude}°, {self.longitude}°, {self.elevation}m")
+        logger.info(f"Astronomy calculator initialized for location: {self.latitude} degrees, {self.longitude} degrees, {self.elevation}m")
         
         self.location = EarthLocation(
             lat=self.latitude * u.deg,
