@@ -282,6 +282,35 @@
     
     console.log('Astronomical zones data:', astronomicalZones);
     
+    // Debug: Log zone transitions to see what's happening
+    if (astronomicalZones && astronomicalZones.length > 0) {
+        console.log('Zone transitions:');
+        astronomicalZones.forEach((zone, index) => {
+            const time = new Date(zone.timestamp).toLocaleString();
+            const sunAlt = zone.sun_altitude ? zone.sun_altitude.toFixed(1) : 'N/A';
+            console.log(`${index}: ${time} - ${zone.zone} (sun: ${sunAlt}°)`);
+        });
+        
+        // Group consecutive zones to see the pattern
+        console.log('\nGrouped zones:');
+        let currentZone = null;
+        let zoneStart = 0;
+        for (let i = 0; i <= astronomicalZones.length; i++) {
+            const zone = i < astronomicalZones.length ? astronomicalZones[i] : null;
+            
+            if (!zone || zone.zone !== currentZone) {
+                if (currentZone && i > zoneStart) {
+                    const startTime = new Date(astronomicalZones[zoneStart].timestamp).toLocaleTimeString();
+                    const endTime = i > 0 ? new Date(astronomicalZones[i-1].timestamp).toLocaleTimeString() : 'end';
+                    const duration = i - zoneStart;
+                    console.log(`${currentZone}: ${startTime} - ${endTime} (${duration} points)`);
+                }
+                currentZone = zone ? zone.zone : null;
+                zoneStart = i;
+            }
+        }
+    }
+    
     // Custom plugin to draw astronomical background zones
     const astronomicalBackgroundPlugin = {
         id: 'astronomicalBackground',

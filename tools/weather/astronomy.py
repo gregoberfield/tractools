@@ -23,7 +23,9 @@ class AstronomyCalculator:
         self.elevation = Config.OBSERVATORY_ELEVATION
         
         if self.latitude == 0.0 and self.longitude == 0.0:
-            logger.warning("Observatory location not configured. Using default coordinates (0,0).")
+            logger.warning("Observatory location not configured. Using default coordinates (0,0). Please set OBSERVATORY_LATITUDE and OBSERVATORY_LONGITUDE environment variables.")
+        
+        logger.info(f"Astronomy calculator initialized for location: {self.latitude}°, {self.longitude}°, {self.elevation}m")
         
         self.location = EarthLocation(
             lat=self.latitude * u.deg,
@@ -131,12 +133,14 @@ class AstronomyCalculator:
         while current_time <= end_time:
             zone = self.get_darkness_zone(current_time)
             color = self.get_zone_color(zone)
+            sun_alt = self.get_sun_altitude(current_time)
             
             zones.append({
                 'time': current_time,
                 'zone': zone,
                 'color': color,
-                'timestamp': current_time.timestamp() * 1000  # For JavaScript
+                'timestamp': current_time.timestamp() * 1000,  # For JavaScript
+                'sun_altitude': sun_alt  # For debugging
             })
             
             # Move to next interval
