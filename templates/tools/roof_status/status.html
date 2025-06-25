@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Roof Status - WebTools Suite{% endblock %}
+{% block title %}Roof Status - TRACTools{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -210,15 +210,6 @@
                     <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
                     <h5 class="text-muted mt-3">No roof status data available</h5>
                     <p class="text-muted">Status updates will appear here when received via the API.</p>
-                    <div class="mt-4">
-                        <h6>API Endpoint:</h6>
-                        <code>POST /tools/roof-status/api/sfro-roof-status</code>
-                        <div class="mt-2">
-                            <small class="text-muted">
-                                Send JSON data with <code>file_path</code> and <code>found</code> fields.
-                            </small>
-                        </div>
-                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -226,35 +217,6 @@
     </div>
 </div>
 
-<!-- API Information -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-code-slash"></i>
-                    API Information
-                </h5>
-            </div>
-            <div class="card-body">
-                <h6>Submit Roof Status Updates:</h6>
-                <p><code>POST /tools/roof-status/api/sfro-roof-status</code></p>
-                
-                <h6>Example Request:</h6>
-                <pre class="bg-light p-3 rounded"><code>{
-  "file_path": "R:\\roof\\building-1\\RoofStatusFile.txt",
-  "found": true
-}</code></pre>
-                
-                <h6>Other API Endpoints:</h6>
-                <ul>
-                    <li><code>GET /tools/roof-status/api/status</code> - Get all statuses</li>
-                    <li><code>GET /tools/roof-status/api/building/{building_id}</code> - Get specific building status</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_css %}

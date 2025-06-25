@@ -9,9 +9,11 @@
         <button class="btn btn-outline-primary" onclick="refreshStatus()">
             <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
-        <button class="btn btn-success" onclick="reloadConfig()">
-            <i class="bi bi-gear"></i> Reload Config
-        </button>
+        {% if current_user.is_authenticated %}
+            <button class="btn btn-success" onclick="reloadConfig()">
+                <i class="bi bi-gear"></i> Reload Config
+            </button>
+        {% endif %}
     </div>
 </div>
 
@@ -111,7 +113,11 @@ function updateStatusDisplay(data) {
     }
     
     let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr>';
-    html += '<th>Stream Name</th><th>Status</th><th>Last Update</th><th>RTSP URL</th><th>Actions</th></tr></thead><tbody>';
+    html += '<th>Stream Name</th><th>Status</th><th>Last Update</th><th>RTSP URL</th>';
+    {% if current_user.is_authenticated %}
+    html += '<th>Actions</th>';
+    {% endif %}
+    html += '</tr></thead><tbody>';
     
     for (const [name, stream] of Object.entries(data.streams)) {
         const statusClass = stream.status === 'running' ? 'success' : 
@@ -121,12 +127,14 @@ function updateStatusDisplay(data) {
             <td><strong>${name}</strong></td>
             <td><span class="badge bg-${statusClass}">${stream.status}</span></td>
             <td>${stream.last_update || 'Never'}</td>
-            <td><code>${stream.rtsp_url}</code></td>
-            <td>
+            <td><code>${stream.rtsp_url}</code></td>`;
+        {% if current_user.is_authenticated %}
+        html += `<td>
                 <button class="btn btn-sm btn-success" onclick="toggleStream('${name}', 'start')">Start</button>
                 <button class="btn btn-sm btn-danger" onclick="toggleStream('${name}', 'stop')">Stop</button>
-            </td>
-        </tr>`;
+            </td>`;
+        {% endif %}
+        html += `</tr>`;
     }
     
     html += '</tbody></table></div>';
