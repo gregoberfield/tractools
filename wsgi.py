@@ -12,7 +12,8 @@ os.chdir('/var/www/tools/tractools')
 os.environ['FLASK_ENV'] = 'production'
 
 # Import the Flask application
-from app import app as application
+from app import create_app
+application = create_app()
 
 if __name__ == "__main__":
     application.run()

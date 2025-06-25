@@ -188,7 +188,9 @@ def create_app():
     
     return app
 
+# Create app instance for Flask CLI
+app = create_app()
+
 # For direct execution (development)
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5000)
