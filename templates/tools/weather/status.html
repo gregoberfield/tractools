@@ -262,9 +262,74 @@
     
     const windSpeedSMA = calculateSMA(chartData.map(item => item.windSpeed), 30);
     
-    // For now, skip the background zones until we get the basic charts working
-    // TODO: Add astronomical background zones later
+    // Create background gradient based on astronomical zones
+    function createBackgroundGradient(ctx, chartArea, zones) {
+        if (!zones || zones.length === 0) {
+            return null;
+        }
+        
+        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+        
+        // Map zones to gradient stops
+        const totalWidth = chartArea.right - chartArea.left;
+        zones.forEach((zone, index) => {
+            const position = index / (zones.length - 1);
+            gradient.addColorStop(position, zone.color);
+        });
+        
+        return gradient;
+    }
+    
     console.log('Astronomical zones data:', astronomicalZones);
+    
+    // Custom plugin to draw astronomical background zones
+    const astronomicalBackgroundPlugin = {
+        id: 'astronomicalBackground',
+        beforeDraw: (chart, args, options) => {
+            if (!astronomicalZones || astronomicalZones.length === 0) {
+                return;
+            }
+            
+            const { ctx, chartArea } = chart;
+            const xScale = chart.scales.x;
+            
+            ctx.save();
+            
+            // Group consecutive zones of the same type
+            let currentZone = null;
+            let zoneStart = null;
+            
+            astronomicalZones.forEach((zone, index) => {
+                const zoneTime = new Date(zone.timestamp);
+                const timeString = zoneTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                if (!currentZone || currentZone !== zone.zone) {
+                    // Draw previous zone if it exists
+                    if (currentZone && zoneStart !== null) {
+                        const endX = xScale.getPixelForValue(timeString);
+                        ctx.fillStyle = astronomicalZones.find(z => z.zone === currentZone)?.color || 'rgba(0,0,0,0.1)';
+                        ctx.fillRect(zoneStart, chartArea.top, endX - zoneStart, chartArea.height);
+                    }
+                    
+                    // Start new zone
+                    currentZone = zone.zone;
+                    zoneStart = xScale.getPixelForValue(timeString);
+                }
+                
+                // Handle last zone
+                if (index === astronomicalZones.length - 1) {
+                    const endX = chartArea.right;
+                    ctx.fillStyle = zone.color;
+                    ctx.fillRect(zoneStart, chartArea.top, endX - zoneStart, chartArea.height);
+                }
+            });
+            
+            ctx.restore();
+        }
+    };
+    
+    // Register the custom plugin
+    Chart.register(astronomicalBackgroundPlugin);
     
     // Common chart options
     const commonOptions = {
@@ -286,7 +351,8 @@
         plugins: {
             legend: {
                 display: false
-            }
+            },
+            astronomicalBackground: true
         }
     };
     
