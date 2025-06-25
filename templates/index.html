@@ -24,8 +24,7 @@
                     <span class="badge {{ modules.image_streamer.badge_class }} status-badge">{{ modules.image_streamer.status }}</span>
                 </div>
                 <p class="card-text">
-                    Scrapes images from web URLs and serves them as real-time RTSP video streams.
-                    Configure multiple sources with custom update frequencies.
+                    Scrapes observatory camera images from SFRO and provides them as a RTSP stream.
                 </p>
                 <div class="d-flex justify-content-between">
                     {% if modules.image_streamer.enabled %}
@@ -54,8 +53,7 @@
                     <span class="badge {{ modules.roof_status.badge_class }} status-badge">{{ modules.roof_status.status }}</span>
                 </div>
                 <p class="card-text">
-                    Monitors roof status file submissions via REST API. Tracks building status updates
-                    and provides a dashboard for viewing current status across all buildings.
+                    Monitors roof status file at SFRO for all buildings.
                 </p>
                 <div class="d-flex justify-content-between">
                     {% if modules.roof_status.enabled %}
@@ -81,8 +79,7 @@
                     <span class="badge {{ modules.weather.badge_class }} status-badge">{{ modules.weather.status }}</span>
                 </div>
                 <p class="card-text">
-                    Collects weather data from remote site via REST API. Displays current conditions
-                    and historical trends with 24-hour data visualization.
+                    Collects weather data from SFRO and displays current and the past 24 hours of weather data.
                 </p>
                 <div class="d-flex justify-content-between">
                     {% if modules.weather.enabled %}
