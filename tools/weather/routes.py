@@ -27,7 +27,7 @@ def get_status():
             end_time = max(data.created_at for data in historical_data)
             logger.info(f"Calculating astronomical zones from {start_time} to {end_time}")
             astronomical_zones = astro_calc.calculate_zones_for_timerange(
-                start_time, end_time, interval_minutes=30
+                start_time, end_time, interval_minutes=10
             )
             logger.info(f"Generated {len(astronomical_zones)} astronomical zone data points")
         
