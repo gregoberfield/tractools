@@ -220,9 +220,15 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 <script>
+    // Register Chart.js plugins
+    Chart.register(ChartAnnotation);
+    
     // Historical data from server
     const historicalData = {{ historical_data | tojson | safe }};
+    const astronomicalZones = {{ astronomical_zones | tojson | safe }};
     
     // Prepare data for charts
     const chartData = historicalData.map(item => {
@@ -258,6 +264,54 @@
     
     const windSpeedSMA = calculateSMA(chartData.map(item => item.windSpeed), 30);
     
+    // Create background zones for astronomical periods
+    function createBackgroundZones() {
+        if (!astronomicalZones || astronomicalZones.length === 0) {
+            return {};
+        }
+        
+        const annotations = {};
+        let currentZone = null;
+        let zoneIndex = 0;
+        
+        for (let i = 0; i < astronomicalZones.length; i++) {
+            const zone = astronomicalZones[i];
+            const zoneTime = new Date(zone.timestamp);
+            const timeString = zoneTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            if (!currentZone || currentZone.zoneName !== zone.zone) {
+                // Close previous zone if exists
+                if (currentZone) {
+                    currentZone.xMax = timeString;
+                    annotations[`zone${zoneIndex}`] = currentZone;
+                    zoneIndex++;
+                }
+                
+                // Start new zone
+                currentZone = {
+                    type: 'box',
+                    xMin: timeString,
+                    xMax: null,
+                    backgroundColor: zone.color,
+                    borderWidth: 0,
+                    zoneName: zone.zone
+                };
+            }
+        }
+        
+        // Close the last zone
+        if (currentZone && astronomicalZones.length > 0) {
+            const lastZone = astronomicalZones[astronomicalZones.length - 1];
+            const lastTimeString = new Date(lastZone.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            currentZone.xMax = lastTimeString;
+            annotations[`zone${zoneIndex}`] = currentZone;
+        }
+        
+        return annotations;
+    }
+    
+    const backgroundZones = createBackgroundZones();
+    
     // Common chart options
     const commonOptions = {
         responsive: true,
@@ -278,6 +332,9 @@
         plugins: {
             legend: {
                 display: false
+            },
+            annotation: {
+                annotations: backgroundZones
             }
         }
     };

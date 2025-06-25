@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, render_template
 from .models import WeatherData, db
+from .astronomy import AstronomyCalculator
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,15 +19,27 @@ def get_status():
             WeatherData.created_at >= twenty_four_hours_ago
         ).order_by(WeatherData.created_at.desc()).all()
         
+        # Calculate astronomical zones for the time period
+        astro_calc = AstronomyCalculator()
+        astronomical_zones = []
+        if historical_data:
+            start_time = min(data.created_at for data in historical_data)
+            end_time = max(data.created_at for data in historical_data)
+            astronomical_zones = astro_calc.calculate_zones_for_timerange(
+                start_time, end_time, interval_minutes=30
+            )
+        
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
                 'current_weather': latest_weather.to_dict() if latest_weather else {},
-                'historical_data': [data.to_dict() for data in historical_data]
+                'historical_data': [data.to_dict() for data in historical_data],
+                'astronomical_zones': astronomical_zones
             })
         else:
             return render_template('tools/weather/status.html', 
                                  current_weather=latest_weather if latest_weather else None,
-                                 historical_data=[data.to_dict() for data in historical_data])
+                                 historical_data=[data.to_dict() for data in historical_data],
+                                 astronomical_zones=astronomical_zones)
     except Exception as e:
         logger.error(f"Error getting weather status: {e}")
         if request.headers.get('Accept') == 'application/json':
@@ -35,7 +48,8 @@ def get_status():
             return render_template('tools/weather/status.html', 
                                  error=str(e), 
                                  current_weather=None,
-                                 historical_data=[])
+                                 historical_data=[],
+                                 astronomical_zones=[])
 
 @weather_bp.route('/api/weatherdata', methods=['POST'])
 def update_weather_data():
