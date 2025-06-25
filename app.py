@@ -74,19 +74,30 @@ def create_app():
     from flask_migrate import Migrate
     migrate = Migrate(app, db)
     
-    # Initialize database tables and default data
-    with app.app_context():
-        # Only create all tables if no migration directory exists (first run)
-        import os
-        if not os.path.exists('migrations'):
-            logger.info("No migrations directory found, creating all tables...")
-            db.create_all()
-        
-        # Always ensure default admin user exists (safe to call repeatedly)
+    # Register a CLI command to initialize the database
+    @app.cli.command()
+    def init_db():
+        """Initialize the database with tables and default admin user."""
+        db.create_all()
+        User.create_default_admin()
+        print("Database initialized successfully!")
+    
+    # Only initialize database for non-CLI contexts
+    if not app.config.get('TESTING', False):
         try:
-            User.create_default_admin()
+            with app.app_context():
+                # Check if we need to initialize (only if no tables exist)
+                from sqlalchemy import inspect
+                inspector = inspect(db.engine)
+                existing_tables = inspector.get_table_names()
+                
+                if not existing_tables:
+                    logger.info("No tables found, creating initial database...")
+                    db.create_all()
+                    User.create_default_admin()
         except Exception as e:
-            logger.warning(f"Admin user creation: {e}")
+            # Don't fail app startup if database isn't accessible yet
+            logger.warning(f"Database initialization skipped: {e}")
     
     # Register authentication blueprint
     from auth_routes import auth_bp
