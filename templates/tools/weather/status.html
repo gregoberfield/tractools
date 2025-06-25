@@ -185,7 +185,7 @@
                     {% if historical_data %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <h6>Temperature Trend</h6>
+                                <h6>Temperature Trends</h6>
                                 <div class="chart-container">
                                     <canvas id="temperatureChart"></canvas>
                                 </div>
@@ -202,12 +202,6 @@
                                 <h6>Wind Speed Trend</h6>
                                 <div class="chart-container">
                                     <canvas id="windSpeedChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <h6>Sky Temperature Trend</h6>
-                                <div class="chart-container">
-                                    <canvas id="skyTemperatureChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -237,6 +231,7 @@
         return {
             timestamp: localDate,
             temperature: item.temperature_f,
+            dewPoint: item.dew_point_f,
             humidity: item.humidity_percent,
             windSpeed: item.wind_speed_mph,
             skyTemperature: item.sky_temperature_f
@@ -269,23 +264,43 @@
         }
     };
     
-    // Temperature Chart
+    // Temperature Chart (combined with dew point and sky temperature)
     const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
     new Chart(temperatureCtx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Temperature (°F)',
+                label: 'Temperature',
                 data: chartData.map(item => item.temperature),
                 borderColor: 'rgb(255, 99, 132)',
                 backgroundColor: 'rgba(255, 99, 132, 0.1)',
                 tension: 0.1,
-                fill: true
+                fill: false
+            }, {
+                label: 'Dew Point',
+                data: chartData.map(item => item.dewPoint),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: false
+            }, {
+                label: 'Sky Temperature',
+                data: chartData.map(item => item.skyTemperature),
+                borderColor: 'rgb(153, 102, 255)',
+                backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                tension: 0.1,
+                fill: false
             }]
         },
         options: {
             ...commonOptions,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
             scales: {
                 ...commonOptions.scales,
                 y: {
@@ -340,8 +355,8 @@
             datasets: [{
                 label: 'Wind Speed (mph)',
                 data: chartData.map(item => item.windSpeed),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                borderColor: 'rgb(255, 159, 64)',
+                backgroundColor: 'rgba(255, 159, 64, 0.1)',
                 tension: 0.1,
                 fill: true
             }]
@@ -357,36 +372,6 @@
                         text: 'Wind Speed (mph)'
                     },
                     beginAtZero: true
-                }
-            }
-        }
-    });
-    
-    // Sky Temperature Chart
-    const skyTemperatureCtx = document.getElementById('skyTemperatureChart').getContext('2d');
-    new Chart(skyTemperatureCtx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Sky Temperature (°F)',
-                data: chartData.map(item => item.skyTemperature),
-                borderColor: 'rgb(153, 102, 255)',
-                backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                tension: 0.1,
-                fill: true
-            }]
-        },
-        options: {
-            ...commonOptions,
-            scales: {
-                ...commonOptions.scales,
-                y: {
-                    ...commonOptions.scales.y,
-                    title: {
-                        display: true,
-                        text: 'Sky Temperature (°F)'
-                    }
                 }
             }
         }
