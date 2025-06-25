@@ -18,8 +18,8 @@ class Config:
     DATABASE_TYPE = os.environ.get('DATABASE_TYPE', 'sqlite')  # sqlite, postgresql, mysql
     DATABASE_URL = os.environ.get('DATABASE_URL')
     
-    # SQLite (default) - store in instance directory
-    SQLITE_DB_PATH = os.environ.get('SQLITE_DB_PATH', os.path.join('instance', 'tractools.db'))
+    # SQLite (default) - store in root directory
+    SQLITE_DB_PATH = os.environ.get('SQLITE_DB_PATH', 'tractools.db')
     
     # PostgreSQL
     POSTGRES_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
@@ -46,8 +46,8 @@ class Config:
         elif self.DATABASE_TYPE.lower() == 'mysql':
             return f"mysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
         else:
-            # Default to SQLite - use root directory
-            return f"sqlite:///tractools.db"
+            # Default to SQLite
+            return f"sqlite:///{self.SQLITE_DB_PATH}"
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
