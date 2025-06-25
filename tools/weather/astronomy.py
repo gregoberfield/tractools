@@ -66,7 +66,7 @@ class AstronomyCalculator:
         Returns:
             String classification of darkness zone
         """
-        if sun_altitude > -0.83:  # Above horizon (accounting for atmospheric refraction)
+        if sun_altitude > 0:  # Above horizon
             return "day"
         elif sun_altitude > -6:   # Civil twilight
             return "civil_twilight"
