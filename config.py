@@ -59,7 +59,7 @@ class Config:
     
     # Admin Authentication
     ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'changeme123')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'your_new_secure_password_here')
     
     @staticmethod
     def load_streams_config():

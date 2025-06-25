@@ -63,6 +63,9 @@ def create_app():
     from tools.weather.models import db
     db.init_app(app)
     
+    # Import auth models to register them with SQLAlchemy
+    from auth_models import User
+    
     # Initialize Flask-Migrate
     from flask_migrate import Migrate
     migrate = Migrate(app, db)
@@ -72,6 +75,8 @@ def create_app():
     if not os.path.exists('migrations'):
         with app.app_context():
             db.create_all()
+            # Create default admin user
+            User.create_default_admin()
     
     # Register authentication blueprint
     from auth_routes import auth_bp

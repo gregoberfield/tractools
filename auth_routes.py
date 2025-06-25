@@ -22,7 +22,7 @@ def login():
         password = request.form.get('password')
         
         if AdminUser.verify_password(username, password):
-            user = AdminUser(username)
+            user = AdminUser.get_by_username(username)
             login_user(user)
             
             # Redirect to next page or home
