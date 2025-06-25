@@ -46,8 +46,8 @@ class Config:
         elif self.DATABASE_TYPE.lower() == 'mysql':
             return f"mysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
         else:
-            # Default to SQLite
-            return f"sqlite:///{self.SQLITE_DB_PATH}"
+            # Default to SQLite - use root directory
+            return f"sqlite:///tractools.db"
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
