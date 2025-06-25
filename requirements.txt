@@ -4,5 +4,6 @@ gunicorn
 SQLAlchemy
 Flask-SQLAlchemy
 Flask-Login
+Flask-Migrate
 Werkzeug
 astropy

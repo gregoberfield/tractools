@@ -63,8 +63,15 @@ def create_app():
     from tools.weather.models import db
     db.init_app(app)
     
-    with app.app_context():
-        db.create_all()
+    # Initialize Flask-Migrate
+    from flask_migrate import Migrate
+    migrate = Migrate(app, db)
+    
+    # Only create tables if no migration directory exists (first run)
+    import os
+    if not os.path.exists('migrations'):
+        with app.app_context():
+            db.create_all()
     
     # Register authentication blueprint
     from auth_routes import auth_bp
