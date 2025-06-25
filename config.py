@@ -57,6 +57,10 @@ class Config:
     OBSERVATORY_ELEVATION = float(os.environ.get('OBSERVATORY_ELEVATION', 0.0))  # meters above sea level
     OBSERVATORY_TIMEZONE = os.environ.get('OBSERVATORY_TIMEZONE', 'UTC')
     
+    # Admin Authentication
+    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'changeme123')
+    
     @staticmethod
     def load_streams_config():
         """Load stream configuration from JSON file"""

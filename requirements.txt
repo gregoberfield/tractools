@@ -3,4 +3,6 @@ requests
 gunicorn
 SQLAlchemy
 Flask-SQLAlchemy
+Flask-Login
+Werkzeug
 astropy

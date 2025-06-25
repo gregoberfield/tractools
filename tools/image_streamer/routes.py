@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template
+from flask_login import login_required
 from .service import ImageStreamerTool
 import logging
 
@@ -36,6 +37,7 @@ def get_status():
             return render_template('tools/image_streamer/status.html', error=str(e))
 
 @image_streamer_bp.route('/streams')
+@login_required
 def list_streams():
     """List all configured streams"""
     try:

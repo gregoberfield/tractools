@@ -55,12 +55,20 @@ def create_app():
     config_instance = Config()
     app.config['SQLALCHEMY_DATABASE_URI'] = config_instance.SQLALCHEMY_DATABASE_URI
     
+    # Initialize authentication
+    from auth import init_auth
+    init_auth(app)
+    
     # Initialize database
     from tools.weather.models import db
     db.init_app(app)
     
     with app.app_context():
         db.create_all()
+    
+    # Register authentication blueprint
+    from auth_routes import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     
     # Register tool blueprints
     from tools.image_streamer import image_streamer_bp
