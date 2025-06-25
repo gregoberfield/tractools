@@ -9,9 +9,11 @@
         <a href="/tools/image-streamer/status" class="btn btn-outline-primary">
             <i class="bi bi-activity"></i> View Status
         </a>
-        <button class="btn btn-success" onclick="reloadConfig()">
-            <i class="bi bi-arrow-clockwise"></i> Reload Config
-        </button>
+        {% if current_user.is_authenticated %}
+            <button class="btn btn-success" onclick="reloadConfig()">
+                <i class="bi bi-arrow-clockwise"></i> Reload Config
+            </button>
+        {% endif %}
     </div>
 </div>
 
@@ -54,24 +56,26 @@
                         </button>
                     </p>
                 </div>
-                <div class="card-footer">
-                    {% if stream.enabled %}
-                        {% if stream.running %}
-                            <button class="btn btn-sm btn-danger" onclick="toggleStream('{{ stream.name }}', 'stop')">
-                                <i class="bi bi-stop-fill"></i> Stop
+                {% if current_user.is_authenticated %}
+                    <div class="card-footer">
+                        {% if stream.enabled %}
+                            {% if stream.running %}
+                                <button class="btn btn-sm btn-danger" onclick="toggleStream('{{ stream.name }}', 'stop')">
+                                    <i class="bi bi-stop-fill"></i> Stop
+                                </button>
+                            {% else %}
+                                <button class="btn btn-sm btn-success" onclick="toggleStream('{{ stream.name }}', 'start')">
+                                    <i class="bi bi-play-fill"></i> Start
+                                </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-primary" onclick="testUrl('{{ stream.url }}')">
+                                <i class="bi bi-link-45deg"></i> Test URL
                             </button>
                         {% else %}
-                            <button class="btn btn-sm btn-success" onclick="toggleStream('{{ stream.name }}', 'start')">
-                                <i class="bi bi-play-fill"></i> Start
-                            </button>
+                            <small class="text-muted">Stream disabled in configuration</small>
                         {% endif %}
-                        <button class="btn btn-sm btn-outline-primary" onclick="testUrl('{{ stream.url }}')">
-                            <i class="bi bi-link-45deg"></i> Test URL
-                        </button>
-                    {% else %}
-                        <small class="text-muted">Stream disabled in configuration</small>
-                    {% endif %}
-                </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -80,10 +84,14 @@
             <div class="alert alert-info text-center">
                 <i class="bi bi-info-circle fs-1"></i>
                 <h4 class="mt-3">No Streams Configured</h4>
-                <p>Add stream configurations to <code>config/streams.json</code> to get started.</p>
-                <button class="btn btn-primary" onclick="showConfigExample()">
-                    <i class="bi bi-file-text"></i> Show Config Example
-                </button>
+                {% if current_user.is_authenticated %}
+                    <p>Add stream configurations to <code>config/streams.json</code> to get started.</p>
+                    <button class="btn btn-primary" onclick="showConfigExample()">
+                        <i class="bi bi-file-text"></i> Show Config Example
+                    </button>
+                {% else %}
+                    <p>No streams are currently configured. Contact an administrator for setup.</p>
+                {% endif %}
             </div>
         </div>
     {% endif %}

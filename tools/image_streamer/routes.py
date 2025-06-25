@@ -37,7 +37,6 @@ def get_status():
             return render_template('tools/image_streamer/status.html', error=str(e))
 
 @image_streamer_bp.route('/streams')
-@login_required
 def list_streams():
     """List all configured streams"""
     try:
@@ -57,6 +56,7 @@ def list_streams():
             return render_template('tools/image_streamer/streams.html', error=str(e), streams=[])
 
 @image_streamer_bp.route('/streams/<stream_name>/start', methods=['POST'])
+@login_required
 def start_stream(stream_name):
     """Start a specific stream"""
     try:
@@ -68,6 +68,7 @@ def start_stream(stream_name):
         return jsonify({'error': str(e)}), 500
 
 @image_streamer_bp.route('/streams/<stream_name>/stop', methods=['POST'])
+@login_required
 def stop_stream(stream_name):
     """Stop a specific stream"""
     try:
@@ -79,6 +80,7 @@ def stop_stream(stream_name):
         return jsonify({'error': str(e)}), 500
 
 @image_streamer_bp.route('/reload', methods=['POST'])
+@login_required
 def reload_config():
     """Reload configuration file"""
     try:
