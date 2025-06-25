@@ -103,19 +103,38 @@ def create_app():
     from auth_routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
     
-    # Register tool blueprints
-    from tools.image_streamer import image_streamer_bp
-    from tools.roof_status import roof_status_bp
-    from tools.weather import weather_bp
-    app.register_blueprint(image_streamer_bp, url_prefix='/tools/image-streamer')
-    app.register_blueprint(roof_status_bp, url_prefix='/tools/roof-status')
-    app.register_blueprint(weather_bp, url_prefix='/tools/weather')
+    # Import module manager and create error handlers
+    from module_manager import create_module_error_handlers, ModuleManager
+    create_module_error_handlers(app)
+    
+    # Register tool blueprints conditionally based on module configuration
+    if ModuleManager.is_module_enabled('image_streamer'):
+        from tools.image_streamer import image_streamer_bp
+        app.register_blueprint(image_streamer_bp, url_prefix='/tools/image-streamer')
+        logger.info("Image Streamer module registered")
+    else:
+        logger.info("Image Streamer module disabled")
+    
+    if ModuleManager.is_module_enabled('roof_status'):
+        from tools.roof_status import roof_status_bp
+        app.register_blueprint(roof_status_bp, url_prefix='/tools/roof-status')
+        logger.info("Roof Status module registered")
+    else:
+        logger.info("Roof Status module disabled")
+    
+    if ModuleManager.is_module_enabled('weather'):
+        from tools.weather import weather_bp
+        app.register_blueprint(weather_bp, url_prefix='/tools/weather')
+        logger.info("Weather module registered")
+    else:
+        logger.info("Weather module disabled")
     
     # Main application routes
     @app.route('/')
     def index():
         """Main dashboard showing available tools"""
-        return render_template('index.html')
+        modules_status = ModuleManager.get_all_modules_status()
+        return render_template('index.html', modules=modules_status)
     
     @app.route('/health')
     def health_check():
@@ -129,6 +148,13 @@ def create_app():
     @app.route('/api/sfro-roof-status', methods=['POST'])
     def root_api_sfro_roof_status():
         """Root-level API endpoint that forwards to the roof status tool"""
+        # Check if roof status module is enabled
+        if not ModuleManager.is_module_enabled('roof_status'):
+            return jsonify({
+                'status': 'error',
+                'message': 'Roof status module is currently disabled'
+            }), 503
+            
         from tools.roof_status.routes import get_service
         from flask import request
         import logging

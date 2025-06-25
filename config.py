@@ -61,6 +61,13 @@ class Config:
     ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'your_new_secure_password_here')
     
+    # Module Configuration - Enable/Disable Modules
+    MODULES_ENABLED = {
+        'image_streamer': os.environ.get('MODULE_IMAGE_STREAMER', 'true').lower() == 'true',
+        'roof_status': os.environ.get('MODULE_ROOF_STATUS', 'true').lower() == 'true',
+        'weather': os.environ.get('MODULE_WEATHER', 'true').lower() == 'true',
+    }
+    
     @staticmethod
     def load_streams_config():
         """Load stream configuration from JSON file"""

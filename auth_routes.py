@@ -42,3 +42,11 @@ def logout():
     logout_user()
     flash('You have been logged out successfully', 'success')
     return redirect(url_for('index'))
+
+@auth_bp.route('/modules')
+@login_required
+def manage_modules():
+    """Admin page to manage module states"""
+    from module_manager import ModuleManager
+    modules_status = ModuleManager.get_all_modules_status()
+    return render_template('auth/modules.html', modules=modules_status)
