@@ -107,6 +107,11 @@ def create_app():
     from module_manager import create_module_error_handlers, ModuleManager
     create_module_error_handlers(app)
     
+    # Make module status available to all templates
+    @app.context_processor
+    def inject_module_status():
+        return dict(module_manager=ModuleManager)
+    
     # Register tool blueprints conditionally based on module configuration
     if ModuleManager.is_module_enabled('image_streamer'):
         from tools.image_streamer import image_streamer_bp

@@ -32,15 +32,21 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/">Home</a>
                     </li>
+                    {% if module_manager.is_module_enabled('image_streamer') %}
                     <li class="nav-item">
                         <a class="nav-link" href="/tools/image-streamer/status">Streams</a>
                     </li>
+                    {% endif %}
+                    {% if module_manager.is_module_enabled('roof_status') %}
                     <li class="nav-item">
                         <a class="nav-link" href="/tools/roof-status/status">Roof Status</a>
                     </li>
+                    {% endif %}
+                    {% if module_manager.is_module_enabled('weather') %}
                     <li class="nav-item">
                         <a class="nav-link" href="/tools/weather/status">Weather</a>
                     </li>
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('auth.manage_modules') }}">Modules</a>
