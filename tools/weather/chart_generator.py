@@ -16,6 +16,8 @@ from typing import List, Dict, Any, Tuple
 import io
 import base64
 import logging
+import time
+import pytz
 from .chart_cache import get_chart_cache
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,23 @@ class WeatherChartGenerator:
             'lines.linewidth': 2,
             'grid.alpha': 0.3
         })
+        
+        # Get server's local timezone
+        try:
+            # Try to get system timezone
+            import zoneinfo
+            self.local_tz = datetime.now().astimezone().tzinfo
+            self.timezone_name = str(self.local_tz)
+        except ImportError:
+            # Fallback to pytz with system detection
+            import os
+            if 'TZ' in os.environ:
+                self.local_tz = pytz.timezone(os.environ['TZ'])
+            else:
+                # Detect from system
+                local_time = time.localtime()
+                self.local_tz = pytz.timezone(time.tzname[local_time.tm_isdst])
+            self.timezone_name = str(self.local_tz)
     
     def _prepare_data(self, historical_data: List[Dict]) -> pd.DataFrame:
         """Convert historical data to pandas DataFrame with proper datetime indexing."""
@@ -54,8 +73,10 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Convert created_at to datetime with UTC timezone
+        # Convert created_at to datetime with UTC timezone first, then convert to local
         df['timestamp'] = pd.to_datetime(df['created_at'], utc=True)
+        # Convert to local timezone
+        df['timestamp'] = df['timestamp'].dt.tz_convert(self.local_tz)
         df = df.set_index('timestamp')
         df = df.sort_index()
         
@@ -84,11 +105,15 @@ class WeatherChartGenerator:
                 return (r/255, g/255, b/255, a)
             return (0.5, 0.5, 0.5, 0.1)  # Default gray
         
-        # Ensure chart start/end are timezone-aware
+        # Ensure chart start/end are in local timezone
         if chart_start.tzinfo is None:
-            chart_start = chart_start.replace(tzinfo=timezone.utc)
+            chart_start = chart_start.replace(tzinfo=self.local_tz)
+        elif chart_start.tzinfo != self.local_tz:
+            chart_start = chart_start.astimezone(self.local_tz)
         if chart_end.tzinfo is None:
-            chart_end = chart_end.replace(tzinfo=timezone.utc)
+            chart_end = chart_end.replace(tzinfo=self.local_tz)
+        elif chart_end.tzinfo != self.local_tz:
+            chart_end = chart_end.astimezone(self.local_tz)
         
         # Group consecutive zones of the same type
         current_zone = None
@@ -102,9 +127,9 @@ class WeatherChartGenerator:
                 if current_zone and zone_start_time:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
-                    # Convert timestamps to datetime objects
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc)
-                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc)
+                    # Convert timestamps to datetime objects in local timezone
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).astimezone(self.local_tz)
+                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).astimezone(self.local_tz)
                     
                     # Only draw if within chart range
                     if start_dt < chart_end and end_dt > chart_start:
@@ -146,7 +171,7 @@ class WeatherChartGenerator:
         # Customize chart
         ax.set_title('24-Hour Temperature Trends', fontsize=14, fontweight='bold')
         ax.set_ylabel('Temperature (°F)', fontsize=12)
-        ax.set_xlabel('Time', fontsize=12)
+        ax.set_xlabel(f'Time ({self.timezone_name})', fontsize=12)
         ax.legend(loc='upper left')
         ax.grid(True, alpha=0.3)
         
@@ -187,7 +212,7 @@ class WeatherChartGenerator:
         # Customize chart
         ax.set_title('24-Hour Humidity Trend', fontsize=14, fontweight='bold')
         ax.set_ylabel('Humidity (%)', fontsize=12)
-        ax.set_xlabel('Time', fontsize=12)
+        ax.set_xlabel(f'Time ({self.timezone_name})', fontsize=12)
         ax.set_ylim(0, 100)
         ax.grid(True, alpha=0.3)
         
@@ -232,7 +257,7 @@ class WeatherChartGenerator:
         # Customize chart
         ax.set_title('24-Hour Wind Speed Trend', fontsize=14, fontweight='bold')
         ax.set_ylabel('Wind Speed (mph)', fontsize=12)
-        ax.set_xlabel('Time', fontsize=12)
+        ax.set_xlabel(f'Time ({self.timezone_name})', fontsize=12)
         ax.set_ylim(bottom=0)
         ax.legend(loc='upper left')
         ax.grid(True, alpha=0.3)

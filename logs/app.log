@@ -14,3 +14,26 @@
 2025-06-23 13:51:26,667 - werkzeug - INFO -  * Restarting with stat
 2025-06-23 13:51:26,807 - werkzeug - WARNING -  * Debugger is active!
 2025-06-23 13:51:26,809 - werkzeug - INFO -  * Debugger PIN: 165-537-149
+2025-06-26 11:13:23,591 - matplotlib.font_manager - INFO - generated new fontManager
+2025-06-26 11:13:23,948 - app - INFO - No tables found, creating initial database...
+2025-06-26 11:13:24,037 - auth_models - INFO - Created default admin user: admin
+2025-06-26 11:13:24,040 - app - INFO - Image Streamer module registered
+2025-06-26 11:13:24,045 - app - INFO - Roof Status module registered
+2025-06-26 11:13:24,047 - app - INFO - Weather module registered
+2025-06-26 11:13:24,048 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-26 11:13:24,048 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-26 11:13:31,377 - werkzeug - INFO - 127.0.0.1 - - [26/Jun/2025 11:13:31] "GET / HTTP/1.1" 200 -
+2025-06-26 11:13:31,628 - werkzeug - INFO - 127.0.0.1 - - [26/Jun/2025 11:13:31] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-26 11:13:33,184 - tools.weather.astronomy - INFO - Astronomy calculator initialized for location: 31.547925 degrees, -99.38285 degrees, 450.0m
+2025-06-26 11:13:33,329 - werkzeug - INFO - 127.0.0.1 - - [26/Jun/2025 11:13:33] "GET /tools/weather/status HTTP/1.1" 200 -
+2025-06-26 11:16:44,762 - app - INFO - Image Streamer module registered
+2025-06-26 11:16:44,765 - app - INFO - Roof Status module registered
+2025-06-26 11:16:44,766 - app - INFO - Weather module registered
+2025-06-26 11:16:44,768 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-26 11:16:44,768 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-26 11:16:49,972 - tools.weather.astronomy - INFO - Astronomy calculator initialized for location: 31.547925 degrees, -99.38285 degrees, 450.0m
+2025-06-26 11:16:49,973 - tools.weather.routes - INFO - Calculating astronomical zones from 2025-06-25 17:15:40.105744 to 2025-06-26 16:15:32.034012
+2025-06-26 11:17:04,733 - tools.weather.routes - INFO - Generated 138 astronomical zone data points
+2025-06-26 11:17:05,343 - werkzeug - INFO - 127.0.0.1 - - [26/Jun/2025 11:17:05] "GET /tools/weather/status HTTP/1.1" 200 -
