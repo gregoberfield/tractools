@@ -8,6 +8,7 @@ import logging
 import shutil
 from datetime import datetime
 from config import Config
+from module_manager import ModuleManager
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +239,11 @@ class ImageStreamerTool:
                 
     def _start_ffmpeg(self, stream_name, image_path):
         """Start FFmpeg process for RTSP streaming"""
+        # Check if image_streamer module is enabled
+        if not ModuleManager.is_module_enabled('image_streamer'):
+            logger.info(f"Image streamer module is disabled. Skipping FFmpeg launch for stream {stream_name}")
+            return
+            
         stream_data = self.streams[stream_name]
         
         # Kill existing process
