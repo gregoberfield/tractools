@@ -41,20 +41,32 @@ def get_status():
     try:
         latest_weather = _get_cached_weather_data()
         
-        # Get historical data for last 24 hours
+        # Get historical data for last 24 hours based on actual observation time
         from datetime import datetime, timedelta
-        # Use local time since database stores timestamps in local time
+        # Use local time since date/time fields store CDT timestamps
         twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
+        current_date = twenty_four_hours_ago.strftime('%Y-%m-%d')
+        current_time = twenty_four_hours_ago.strftime('%H:%M:%S')
+        
+        # Query using date/time fields for accurate 24-hour rolling window
         historical_data = WeatherData.query.filter(
-            WeatherData.created_at >= twenty_four_hours_ago
-        ).order_by(WeatherData.created_at.desc()).all()
+            (WeatherData.date > current_date) | 
+            ((WeatherData.date == current_date) & (WeatherData.time >= current_time))
+        ).order_by(WeatherData.date.desc(), WeatherData.time.desc()).all()
         
         # Calculate astronomical zones for the time period (with reduced logging)
         astro_calc = AstronomyCalculator()
         astronomical_zones = []
         if historical_data:
-            start_time = min(data.created_at for data in historical_data)
-            end_time = max(data.created_at for data in historical_data)
+            # Use the actual observation times from date/time fields
+            import pandas as pd
+            observation_times = []
+            for data in historical_data:
+                obs_time = pd.to_datetime(f"{data.date} {data.time}", format='mixed')
+                observation_times.append(obs_time)
+            
+            start_time = min(observation_times)
+            end_time = max(observation_times)
             astronomical_zones = astro_calc.calculate_zones_for_timerange(
                 start_time, end_time, interval_minutes=15  # Reduced frequency for performance
             )
