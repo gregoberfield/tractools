@@ -84,22 +84,23 @@ class WeatherChartGenerator:
         for zone_data in astronomical_zones + [None]:
             zone_type = zone_data['zone'] if zone_data else None
             
-            if zone_type != current_zone and current_zone and zone_start_time:
-                # Draw the previous zone
-                end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
+            if zone_type != current_zone:
+                # Draw the previous zone if it exists
+                if current_zone and zone_start_time:
+                    end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
+                    
+                    # Efficient datetime conversion
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000) - cdt_offset
+                    end_dt = datetime.fromtimestamp(end_time / 1000) - cdt_offset
+                    
+                    # Only draw non-transparent zones
+                    color = zone_colors.get(current_zone, (0.5, 0.5, 0.5, 0.1))
+                    if color[3] > 0:  # Skip transparent zones
+                        ax.axvspan(start_dt, end_dt, alpha=color[3], color=color[:3], zorder=0)
                 
-                # Efficient datetime conversion
-                start_dt = datetime.fromtimestamp(zone_start_time / 1000) - cdt_offset
-                end_dt = datetime.fromtimestamp(end_time / 1000) - cdt_offset
-                
-                # Only draw non-transparent zones
-                color = zone_colors.get(current_zone, (0.5, 0.5, 0.5, 0.1))
-                if color[3] > 0:  # Skip transparent zones
-                    ax.axvspan(start_dt, end_dt, alpha=color[3], color=color[:3], zorder=0)
-            
-            # Update state
-            current_zone = zone_type
-            zone_start_time = zone_data['timestamp'] if zone_data else None
+                # Start new zone
+                current_zone = zone_type
+                zone_start_time = zone_data['timestamp'] if zone_data else None
     
     def _calculate_sma(self, data: pd.Series, window: int) -> pd.Series:
         """Calculate Simple Moving Average."""
