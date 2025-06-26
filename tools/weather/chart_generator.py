@@ -63,11 +63,8 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Convert created_at to datetime assuming it's stored in local timezone (CDT)
-        # The database stores naive datetime objects in the server's local time
+        # Convert created_at to datetime - database times are already in CDT, use as-is
         df['timestamp'] = pd.to_datetime(df['created_at'])
-        # Add timezone info to mark these as local time
-        df['timestamp'] = df['timestamp'].dt.tz_localize(self.local_tz)
         df = df.set_index('timestamp')
         df = df.sort_index()
         
@@ -96,15 +93,7 @@ class WeatherChartGenerator:
                 return (r/255, g/255, b/255, a)
             return (0.5, 0.5, 0.5, 0.1)  # Default gray
         
-        # Ensure chart start/end are in local timezone
-        if chart_start.tzinfo is None:
-            chart_start = chart_start.replace(tzinfo=self.local_tz)
-        elif chart_start.tzinfo != self.local_tz:
-            chart_start = chart_start.astimezone(self.local_tz)
-        if chart_end.tzinfo is None:
-            chart_end = chart_end.replace(tzinfo=self.local_tz)
-        elif chart_end.tzinfo != self.local_tz:
-            chart_end = chart_end.astimezone(self.local_tz)
+        # Chart times are already in CDT, no conversion needed
         
         # Group consecutive zones of the same type
         current_zone = None
@@ -118,9 +107,10 @@ class WeatherChartGenerator:
                 if current_zone and zone_start_time:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
-                    # Convert timestamps to datetime objects - astronomical zones are in UTC, convert to local
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).astimezone(self.local_tz)
-                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).astimezone(self.local_tz)
+                    # Convert astronomical zone timestamps to CDT (assuming they're in UTC milliseconds)
+                    # Convert to CDT by subtracting 5 hours (CDT = UTC-5)
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).replace(tzinfo=None) - pd.Timedelta(hours=5)
+                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).replace(tzinfo=None) - pd.Timedelta(hours=5)
                     
                     # Only draw if within chart range
                     if start_dt < chart_end and end_dt > chart_start:
