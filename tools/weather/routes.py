@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template
+from flask_login import login_required
 from .models import WeatherData, db
 from .astronomy import AstronomyCalculator
 from .chart_generator import WeatherChartGenerator
@@ -173,4 +174,32 @@ def api_get_weather_history():
         return jsonify([weather.to_dict() for weather in weather_history])
     except Exception as e:
         logger.error(f"Error getting weather history: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@weather_bp.route('/admin/cache/stats')
+@login_required
+def get_cache_stats():
+    """Admin endpoint to get chart cache statistics"""
+    try:
+        chart_generator = WeatherChartGenerator()
+        stats = chart_generator.get_cache_stats()
+        return jsonify(stats)
+    except Exception as e:
+        logger.error(f"Error getting cache stats: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@weather_bp.route('/admin/cache/clear', methods=['POST'])
+@login_required
+def clear_cache():
+    """Admin endpoint to clear chart cache"""
+    try:
+        chart_generator = WeatherChartGenerator()
+        cleared_count = chart_generator.clear_cache()
+        logger.info(f"Admin cleared {cleared_count} chart cache entries")
+        return jsonify({
+            'status': 'success',
+            'message': f'Cleared {cleared_count} cache entries'
+        })
+    except Exception as e:
+        logger.error(f"Error clearing cache: {e}")
         return jsonify({'error': str(e)}), 500

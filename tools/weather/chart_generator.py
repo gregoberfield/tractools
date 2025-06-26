@@ -16,6 +16,7 @@ from typing import List, Dict, Any, Tuple
 import io
 import base64
 import logging
+from .chart_cache import get_chart_cache
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,8 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Convert created_at to datetime
-        df['timestamp'] = pd.to_datetime(df['created_at'])
+        # Convert created_at to datetime with UTC timezone
+        df['timestamp'] = pd.to_datetime(df['created_at'], utc=True)
         df = df.set_index('timestamp')
         df = df.sort_index()
         
@@ -82,6 +83,12 @@ class WeatherChartGenerator:
                 a = float(values[3].strip())
                 return (r/255, g/255, b/255, a)
             return (0.5, 0.5, 0.5, 0.1)  # Default gray
+        
+        # Ensure chart start/end are timezone-aware
+        if chart_start.tzinfo is None:
+            chart_start = chart_start.replace(tzinfo=timezone.utc)
+        if chart_end.tzinfo is None:
+            chart_end = chart_end.replace(tzinfo=timezone.utc)
         
         # Group consecutive zones of the same type
         current_zone = None
@@ -116,6 +123,12 @@ class WeatherChartGenerator:
     
     def generate_temperature_chart(self, historical_data: List[Dict], astronomical_zones: List[Dict]) -> str:
         """Generate temperature chart with dew point and sky temperature."""
+        # Check cache first
+        cache = get_chart_cache()
+        cached_image = cache.get('temperature', historical_data, astronomical_zones)
+        if cached_image:
+            return cached_image
+        
         df = self._prepare_data(historical_data)
         if df.empty:
             return self._generate_no_data_chart("No temperature data available")
@@ -143,10 +156,21 @@ class WeatherChartGenerator:
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
         
         plt.tight_layout()
-        return self._fig_to_base64(fig)
+        image_data = self._fig_to_base64(fig)
+        
+        # Cache the generated image
+        cache.set('temperature', historical_data, astronomical_zones, image_data)
+        
+        return image_data
     
     def generate_humidity_chart(self, historical_data: List[Dict], astronomical_zones: List[Dict]) -> str:
         """Generate humidity chart."""
+        # Check cache first
+        cache = get_chart_cache()
+        cached_image = cache.get('humidity', historical_data, astronomical_zones)
+        if cached_image:
+            return cached_image
+        
         df = self._prepare_data(historical_data)
         if df.empty:
             return self._generate_no_data_chart("No humidity data available")
@@ -173,10 +197,21 @@ class WeatherChartGenerator:
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
         
         plt.tight_layout()
-        return self._fig_to_base64(fig)
+        image_data = self._fig_to_base64(fig)
+        
+        # Cache the generated image
+        cache.set('humidity', historical_data, astronomical_zones, image_data)
+        
+        return image_data
     
     def generate_wind_speed_chart(self, historical_data: List[Dict], astronomical_zones: List[Dict]) -> str:
         """Generate wind speed chart with SMA."""
+        # Check cache first
+        cache = get_chart_cache()
+        cached_image = cache.get('wind_speed', historical_data, astronomical_zones)
+        if cached_image:
+            return cached_image
+        
         df = self._prepare_data(historical_data)
         if df.empty:
             return self._generate_no_data_chart("No wind speed data available")
@@ -208,7 +243,23 @@ class WeatherChartGenerator:
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
         
         plt.tight_layout()
-        return self._fig_to_base64(fig)
+        image_data = self._fig_to_base64(fig)
+        
+        # Cache the generated image
+        cache.set('wind_speed', historical_data, astronomical_zones, image_data)
+        
+        return image_data
+    
+    def clear_cache(self) -> int:
+        """Clear all cached charts."""
+        cache = get_chart_cache()
+        return cache.clear_all()
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        cache = get_chart_cache()
+        cache.clear_expired()  # Clean up expired entries
+        return cache.get_stats()
     
     def _generate_no_data_chart(self, message: str) -> str:
         """Generate a placeholder chart when no data is available."""
