@@ -66,17 +66,6 @@ class WeatherChartGenerator:
         df = df.set_index('timestamp')
         df = df.sort_index()
         
-        # Log the timestamps being used for x-axis
-        logger.info("=== X-AXIS TIMESTAMP DEBUG ===")
-        logger.info(f"Number of data points: {len(df)}")
-        if not df.empty:
-            logger.info(f"First timestamp: {df.index[0]} (type: {type(df.index[0])})")
-            logger.info(f"Last timestamp: {df.index[-1]} (type: {type(df.index[-1])})")
-            logger.info(f"Sample timestamps:")
-            for i, ts in enumerate(df.index[:5]):  # Show first 5 timestamps
-                logger.info(f"  [{i}]: {ts}")
-        logger.info("=== END TIMESTAMP DEBUG ===")
-        
         return df
     
     def _add_astronomical_background(self, ax, astronomical_zones: List[Dict], chart_start: datetime, chart_end: datetime):
