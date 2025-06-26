@@ -52,8 +52,8 @@ class WeatherChartGenerator:
         # Convert to DataFrame (pre-allocate for performance)
         df = pd.DataFrame(historical_data)
         
-        # Combine date and time fields efficiently
-        df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'], format='%Y-%m-%d %H:%M:%S')
+        # Combine date and time fields efficiently (handle microseconds)
+        df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'], format='mixed')
         df = df.set_index('timestamp')
         df = df.sort_index()
         
