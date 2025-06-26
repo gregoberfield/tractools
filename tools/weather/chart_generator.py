@@ -61,8 +61,8 @@ class WeatherChartGenerator:
         df = pd.DataFrame(historical_data)
         
         # Convert created_at to datetime - database times are already in CDT, use as-is
-        # Explicitly avoid timezone inference by pandas
-        df['timestamp'] = pd.to_datetime(df['created_at'], utc=False)
+        # Parse without any timezone interpretation
+        df['timestamp'] = pd.to_datetime(df['created_at'])
         df = df.set_index('timestamp')
         df = df.sort_index()
         
@@ -103,10 +103,11 @@ class WeatherChartGenerator:
                 if current_zone and zone_start_time:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
-                    # Treat astronomical zone timestamps the same as database timestamps (already in CDT)
-                    # Convert from milliseconds to datetime, but don't do timezone conversion
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000)
-                    end_dt = datetime.fromtimestamp(end_time / 1000)
+                    # Convert astronomical zone timestamps (UTC) to CDT manually
+                    # Subtract 5 hours (CDT offset) to match database times
+                    from datetime import timedelta
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).replace(tzinfo=None) - timedelta(hours=5)
+                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).replace(tzinfo=None) - timedelta(hours=5)
                     
                     # Only draw if within chart range
                     if start_dt < chart_end and end_dt > chart_start:
