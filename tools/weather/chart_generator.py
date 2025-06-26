@@ -63,10 +63,11 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Convert created_at to datetime assuming it's stored in UTC, then convert to local for display
-        df['timestamp'] = pd.to_datetime(df['created_at'], utc=True)
-        # Convert from UTC to local timezone for display only
-        df['timestamp'] = df['timestamp'].dt.tz_convert(self.local_tz)
+        # Convert created_at to datetime assuming it's stored in local timezone (CDT)
+        # The database stores naive datetime objects in the server's local time
+        df['timestamp'] = pd.to_datetime(df['created_at'])
+        # Add timezone info to mark these as local time
+        df['timestamp'] = df['timestamp'].dt.tz_localize(self.local_tz)
         df = df.set_index('timestamp')
         df = df.sort_index()
         
@@ -117,7 +118,7 @@ class WeatherChartGenerator:
                 if current_zone and zone_start_time:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
-                    # Convert timestamps to datetime objects in local timezone
+                    # Convert timestamps to datetime objects - astronomical zones are in UTC, convert to local
                     start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).astimezone(self.local_tz)
                     end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).astimezone(self.local_tz)
                     

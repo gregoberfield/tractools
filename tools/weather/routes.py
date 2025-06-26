@@ -16,7 +16,8 @@ def get_status():
         
         # Get historical data for last 24 hours
         from datetime import datetime, timedelta
-        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+        # Use local time since database stores timestamps in local time
+        twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
         historical_data = WeatherData.query.filter(
             WeatherData.created_at >= twenty_four_hours_ago
         ).order_by(WeatherData.created_at.desc()).all()
