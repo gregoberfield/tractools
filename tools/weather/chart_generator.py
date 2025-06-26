@@ -106,8 +106,8 @@ class WeatherChartGenerator:
                     # Convert astronomical zone timestamps (UTC) to CDT manually
                     # Subtract 5 hours (CDT offset) to match database times
                     from datetime import timedelta
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).replace(tzinfo=None)
-                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).replace(tzinfo=None)
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).replace(tzinfo=None) - timedelta(hours=5)
+                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).replace(tzinfo=None) - timedelta(hours=5)
                     
                     # Only draw if within chart range
                     if start_dt < chart_end and end_dt > chart_start:
