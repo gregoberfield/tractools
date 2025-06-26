@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 import io
@@ -53,8 +52,8 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Parse timestamps without any timezone conversion - keep as Central Time
-        df['timestamp'] = pd.to_datetime(df['created_at']).dt.tz_localize(None)
+        # Combine date and time fields to create timestamp (already in Central Time)
+        df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'])
         df = df.set_index('timestamp')
         df = df.sort_index()
         
