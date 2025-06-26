@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -44,5 +44,5 @@ class WeatherData(db.Model):
             'daylight_condition': self.daylight_condition,
             'roof_close_requested': self.roof_close_requested,
             'alert_condition': self.alert_condition,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.replace(tzinfo=timezone.utc).isoformat() if self.created_at else None
         }

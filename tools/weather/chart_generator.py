@@ -48,22 +48,12 @@ class WeatherChartGenerator:
             'grid.alpha': 0.3
         })
         
-        # Get server's local timezone
-        try:
-            # Try to get system timezone
-            import zoneinfo
-            self.local_tz = datetime.now().astimezone().tzinfo
-            self.timezone_name = str(self.local_tz)
-        except ImportError:
-            # Fallback to pytz with system detection
-            import os
-            if 'TZ' in os.environ:
-                self.local_tz = pytz.timezone(os.environ['TZ'])
-            else:
-                # Detect from system
-                local_time = time.localtime()
-                self.local_tz = pytz.timezone(time.tzname[local_time.tm_isdst])
-            self.timezone_name = str(self.local_tz)
+        # Get server's local timezone - simplified approach
+        # Get the current local time to determine timezone
+        local_dt = datetime.now().astimezone()
+        self.local_tz = local_dt.tzinfo
+        # Get a cleaner timezone name
+        self.timezone_name = local_dt.strftime('%Z')  # e.g., "CDT", "EST", etc.
     
     def _prepare_data(self, historical_data: List[Dict]) -> pd.DataFrame:
         """Convert historical data to pandas DataFrame with proper datetime indexing."""
@@ -73,9 +63,9 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Convert created_at to datetime with UTC timezone first, then convert to local
+        # Convert created_at to datetime assuming it's stored in UTC, then convert to local for display
         df['timestamp'] = pd.to_datetime(df['created_at'], utc=True)
-        # Convert to local timezone
+        # Convert from UTC to local timezone for display only
         df['timestamp'] = df['timestamp'].dt.tz_convert(self.local_tz)
         df = df.set_index('timestamp')
         df = df.sort_index()
