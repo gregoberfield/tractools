@@ -29,6 +29,7 @@ sns.set_palette("husl")
 class WeatherChartGenerator:
     """Generate weather charts with astronomical background shading."""
     
+
     def __init__(self):
         """Initialize the chart generator."""
         # Configure matplotlib for better-looking charts
@@ -48,12 +49,8 @@ class WeatherChartGenerator:
             'grid.alpha': 0.3
         })
         
-        # Get server's local timezone - simplified approach
-        # Get the current local time to determine timezone
-        local_dt = datetime.now().astimezone()
-        self.local_tz = local_dt.tzinfo
-        # Get a cleaner timezone name
-        self.timezone_name = local_dt.strftime('%Z')  # e.g., "CDT", "EST", etc.
+        # Since database times are already in CDT, just use a simple label
+        self.timezone_name = "CDT"
     
     def _prepare_data(self, historical_data: List[Dict]) -> pd.DataFrame:
         """Convert historical data to pandas DataFrame with proper datetime indexing."""
@@ -64,7 +61,8 @@ class WeatherChartGenerator:
         df = pd.DataFrame(historical_data)
         
         # Convert created_at to datetime - database times are already in CDT, use as-is
-        df['timestamp'] = pd.to_datetime(df['created_at'])
+        # Explicitly avoid timezone inference by pandas
+        df['timestamp'] = pd.to_datetime(df['created_at'], utc=False)
         df = df.set_index('timestamp')
         df = df.sort_index()
         
@@ -93,8 +91,6 @@ class WeatherChartGenerator:
                 return (r/255, g/255, b/255, a)
             return (0.5, 0.5, 0.5, 0.1)  # Default gray
         
-        # Chart times are already in CDT, no conversion needed
-        
         # Group consecutive zones of the same type
         current_zone = None
         zone_start_time = None
@@ -107,10 +103,10 @@ class WeatherChartGenerator:
                 if current_zone and zone_start_time:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
-                    # Convert astronomical zone timestamps to CDT (assuming they're in UTC milliseconds)
-                    # Convert to CDT by subtracting 5 hours (CDT = UTC-5)
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=timezone.utc).replace(tzinfo=None) - pd.Timedelta(hours=5)
-                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=timezone.utc).replace(tzinfo=None) - pd.Timedelta(hours=5)
+                    # Treat astronomical zone timestamps the same as database timestamps (already in CDT)
+                    # Convert from milliseconds to datetime, but don't do timezone conversion
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000)
+                    end_dt = datetime.fromtimestamp(end_time / 1000)
                     
                     # Only draw if within chart range
                     if start_dt < chart_end and end_dt > chart_start:
