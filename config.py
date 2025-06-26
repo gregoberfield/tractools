@@ -63,7 +63,7 @@ class Config:
     
     # Module Configuration - Enable/Disable Modules
     MODULES_ENABLED = {
-        'image_streamer': os.environ.get('MODULE_IMAGE_STREAMER', 'true').lower() == 'true',
+        'image_streamer': os.environ.get('MODULE_IMAGE_STREAMER', 'false').lower() == 'true',
         'roof_status': os.environ.get('MODULE_ROOF_STATUS', 'true').lower() == 'true',
         'weather': os.environ.get('MODULE_WEATHER', 'true').lower() == 'true',
     }
