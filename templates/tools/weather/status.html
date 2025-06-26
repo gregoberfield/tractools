@@ -33,13 +33,11 @@
     .alert-warning { background-color: #fff3cd; color: #856404; }
     .alert-critical { background-color: #f8d7da; color: #721c24; }
     .chart-container { 
-        height: 300px; 
         background: #f8f9fa; 
         border: 1px solid #dee2e6; 
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 10px;
+        text-align: center;
     }
     .last-updated { 
         font-size: 0.875rem; 
@@ -182,12 +180,12 @@
                     <h6 class="mb-0">24-Hour Historical Data</h6>
                 </div>
                 <div class="card-body">
-                    {% if historical_data %}
+                    {% if historical_data and temperature_chart %}
                         <div class="row">
                             <div class="col-12 mb-4">
                                 <h6>Temperature Trends</h6>
                                 <div class="chart-container">
-                                    <canvas id="temperatureChart"></canvas>
+                                    <img src="{{ temperature_chart }}" alt="Temperature Chart" class="img-fluid" style="max-width: 100%; height: auto;">
                                 </div>
                             </div>
                         </div>
@@ -195,7 +193,7 @@
                             <div class="col-12 mb-4">
                                 <h6>Humidity Trend</h6>
                                 <div class="chart-container">
-                                    <canvas id="humidityChart"></canvas>
+                                    <img src="{{ humidity_chart }}" alt="Humidity Chart" class="img-fluid" style="max-width: 100%; height: auto;">
                                 </div>
                             </div>
                         </div>
@@ -203,7 +201,7 @@
                             <div class="col-12 mb-4">
                                 <h6>Wind Speed Trend</h6>
                                 <div class="chart-container">
-                                    <canvas id="windSpeedChart"></canvas>
+                                    <img src="{{ wind_speed_chart }}" alt="Wind Speed Chart" class="img-fluid" style="max-width: 100%; height: auto;">
                                 </div>
                             </div>
                         </div>
@@ -221,288 +219,6 @@
 
 {% block extra_js %}
 <script>
-    // Historical data from server
-    const historicalData = {{ historical_data | tojson | safe }};
-    const astronomicalZones = {{ astronomical_zones | tojson | safe }};
-    
-    // Prepare data for charts
-    const chartData = historicalData.map(item => {
-        // Convert UTC timestamp to local time
-        const utcDate = new Date(item.created_at);
-        const localDate = new Date(utcDate.getTime() - (utcDate.getTimezoneOffset() * 60000));
-        
-        return {
-            timestamp: localDate,
-            temperature: item.temperature_f,
-            dewPoint: item.dew_point_f,
-            humidity: item.humidity_percent,
-            windSpeed: item.wind_speed_mph,
-            skyTemperature: item.sky_temperature_f
-        };
-    }).reverse(); // Reverse to show oldest to newest
-    
-    const labels = chartData.map(item => item.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
-    
-    // Calculate Simple Moving Average for wind speed
-    function calculateSMA(data, period) {
-        const sma = [];
-        for (let i = 0; i < data.length; i++) {
-            if (i < period - 1) {
-                sma.push(null); // Not enough data points for SMA
-            } else {
-                const sum = data.slice(i - period + 1, i + 1).reduce((acc, val) => acc + val, 0);
-                sma.push(sum / period);
-            }
-        }
-        return sma;
-    }
-    
-    const windSpeedSMA = calculateSMA(chartData.map(item => item.windSpeed), 30);
-    
-    // Create background gradient based on astronomical zones
-    function createBackgroundGradient(ctx, chartArea, zones) {
-        if (!zones || zones.length === 0) {
-            return null;
-        }
-        
-        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-        
-        // Map zones to gradient stops
-        const totalWidth = chartArea.right - chartArea.left;
-        zones.forEach((zone, index) => {
-            const position = index / (zones.length - 1);
-            gradient.addColorStop(position, zone.color);
-        });
-        
-        return gradient;
-    }
-    
-    
-    // Custom plugin to draw astronomical background zones
-    const astronomicalBackgroundPlugin = {
-        id: 'astronomicalBackground',
-        beforeDraw: (chart, args, options) => {
-            if (!astronomicalZones || astronomicalZones.length === 0 || !chartData || chartData.length === 0) {
-                return;
-            }
-            
-            const { ctx, chartArea } = chart;
-            
-            ctx.save();
-            
-            // Get the time range of the chart data
-            const chartStartTime = chartData[0].timestamp.getTime();
-            const chartEndTime = chartData[chartData.length - 1].timestamp.getTime();
-            const chartTimeRange = chartEndTime - chartStartTime;
-            
-            // Process zones in groups
-            let currentZone = null;
-            let zoneStartTime = null;
-            
-            for (let i = 0; i <= astronomicalZones.length; i++) {
-                const zone = i < astronomicalZones.length ? astronomicalZones[i] : null;
-                const currentZoneType = zone ? zone.zone : null;
-                
-                if (!currentZone || currentZoneType !== currentZone) {
-                    // Draw the previous zone group
-                    if (currentZone && zoneStartTime !== null) {
-                        const endTime = zone ? zone.timestamp : astronomicalZones[astronomicalZones.length - 1].timestamp;
-                        
-                        // Calculate positions as percentages of chart width
-                        const startPercent = Math.max(0, (zoneStartTime - chartStartTime) / chartTimeRange);
-                        const endPercent = Math.min(1, (endTime - chartStartTime) / chartTimeRange);
-                        
-                        const startX = chartArea.left + (startPercent * (chartArea.right - chartArea.left));
-                        const endX = chartArea.left + (endPercent * (chartArea.right - chartArea.left));
-                        
-                        // Get color for the zone type
-                        const zoneColor = astronomicalZones.find(z => z.zone === currentZone)?.color || 'rgba(128,128,128,0.1)';
-                        
-                        ctx.fillStyle = zoneColor;
-                        ctx.fillRect(startX, chartArea.top, endX - startX, chartArea.height);
-                    }
-                    
-                    currentZone = currentZoneType;
-                    zoneStartTime = zone ? zone.timestamp : null;
-                }
-            }
-            
-            ctx.restore();
-        }
-    };
-    
-    // Register the custom plugin
-    Chart.register(astronomicalBackgroundPlugin);
-    
-    // Common chart options
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            x: {
-                display: true,
-                title: {
-                    display: true,
-                    text: 'Time'
-                }
-            },
-            y: {
-                display: true,
-                beginAtZero: false
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            astronomicalBackground: true
-        }
-    };
-    
-    // Temperature Chart (combined with dew point and sky temperature)
-    const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
-    new Chart(temperatureCtx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Temperature',
-                data: chartData.map(item => item.temperature),
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                tension: 0.1,
-                fill: false,
-                borderWidth: 1,
-                pointRadius: 0,
-                pointHoverRadius: 0
-            }, {
-                label: 'Dew Point',
-                data: chartData.map(item => item.dewPoint),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.1,
-                fill: false,
-                borderWidth: 1,
-                pointRadius: 0,
-                pointHoverRadius: 0
-            }, {
-                label: 'Sky Temperature',
-                data: chartData.map(item => item.skyTemperature),
-                borderColor: 'rgb(153, 102, 255)',
-                backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                tension: 0.1,
-                fill: false,
-                borderWidth: 1,
-                pointRadius: 0,
-                pointHoverRadius: 0
-            }]
-        },
-        options: {
-            ...commonOptions,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            },
-            scales: {
-                ...commonOptions.scales,
-                y: {
-                    ...commonOptions.scales.y,
-                    title: {
-                        display: true,
-                        text: 'Temperature (°F)'
-                    }
-                }
-            }
-        }
-    });
-    
-    // Humidity Chart
-    const humidityCtx = document.getElementById('humidityChart').getContext('2d');
-    new Chart(humidityCtx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Humidity (%)',
-                data: chartData.map(item => item.humidity),
-                borderColor: 'rgb(54, 162, 235)',
-                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                tension: 0.1,
-                fill: true,
-                borderWidth: 1,
-                pointRadius: 0,
-                pointHoverRadius: 0
-            }]
-        },
-        options: {
-            ...commonOptions,
-            scales: {
-                ...commonOptions.scales,
-                y: {
-                    ...commonOptions.scales.y,
-                    title: {
-                        display: true,
-                        text: 'Humidity (%)'
-                    },
-                    min: 0,
-                    max: 100
-                }
-            }
-        }
-    });
-    
-    // Wind Speed Chart
-    const windSpeedCtx = document.getElementById('windSpeedChart').getContext('2d');
-    new Chart(windSpeedCtx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Wind Speed (mph)',
-                data: chartData.map(item => item.windSpeed),
-                borderColor: 'rgb(255, 159, 64)',
-                backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                tension: 0.1,
-                fill: true,
-                borderWidth: 1,
-                pointRadius: 0,
-                pointHoverRadius: 0
-            }, {
-                label: 'SMA 30',
-                data: windSpeedSMA,
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                tension: 0.1,
-                fill: false,
-                borderWidth: 2,
-                pointRadius: 0,
-                pointHoverRadius: 0
-            }]
-        },
-        options: {
-            ...commonOptions,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            },
-            scales: {
-                ...commonOptions.scales,
-                y: {
-                    ...commonOptions.scales.y,
-                    title: {
-                        display: true,
-                        text: 'Wind Speed (mph)'
-                    },
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-    
     // Auto-refresh page every 5 minutes
     setTimeout(function() {
         location.reload();

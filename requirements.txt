@@ -7,3 +7,7 @@ Flask-Login
 Flask-Migrate
 Werkzeug
 astropy
+matplotlib
+seaborn
+pandas
+numpy

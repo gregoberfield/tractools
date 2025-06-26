@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, render_template
 from .models import WeatherData, db
 from .astronomy import AstronomyCalculator
+from .chart_generator import WeatherChartGenerator
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,17 +32,28 @@ def get_status():
             )
             logger.info(f"Generated {len(astronomical_zones)} astronomical zone data points")
         
+        # Generate charts server-side
+        chart_generator = WeatherChartGenerator()
+        historical_data_dicts = [data.to_dict() for data in historical_data]
+        
+        temperature_chart = chart_generator.generate_temperature_chart(historical_data_dicts, astronomical_zones)
+        humidity_chart = chart_generator.generate_humidity_chart(historical_data_dicts, astronomical_zones)
+        wind_speed_chart = chart_generator.generate_wind_speed_chart(historical_data_dicts, astronomical_zones)
+        
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
                 'current_weather': latest_weather.to_dict() if latest_weather else {},
-                'historical_data': [data.to_dict() for data in historical_data],
+                'historical_data': historical_data_dicts,
                 'astronomical_zones': astronomical_zones
             })
         else:
             return render_template('tools/weather/status.html', 
                                  current_weather=latest_weather if latest_weather else None,
-                                 historical_data=[data.to_dict() for data in historical_data],
-                                 astronomical_zones=astronomical_zones)
+                                 historical_data=historical_data_dicts,
+                                 astronomical_zones=astronomical_zones,
+                                 temperature_chart=temperature_chart,
+                                 humidity_chart=humidity_chart,
+                                 wind_speed_chart=wind_speed_chart)
     except Exception as e:
         logger.error(f"Error getting weather status: {e}")
         if request.headers.get('Accept') == 'application/json':
@@ -51,7 +63,10 @@ def get_status():
                                  error=str(e), 
                                  current_weather=None,
                                  historical_data=[],
-                                 astronomical_zones=[])
+                                 astronomical_zones=[],
+                                 temperature_chart="",
+                                 humidity_chart="",
+                                 wind_speed_chart="")
 
 @weather_bp.route('/api/weatherdata', methods=['POST'])
 def update_weather_data():
