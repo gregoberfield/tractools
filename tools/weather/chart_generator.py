@@ -60,9 +60,13 @@ class WeatherChartGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(historical_data)
         
-        # Convert created_at to datetime - database times are already in CDT, use as-is
-        # Parse without any timezone interpretation
-        df['timestamp'] = pd.to_datetime(df['created_at'])
+        # Convert created_at to datetime - database times are already in CDT
+        # Use format to prevent pandas from doing automatic timezone conversion
+        df['timestamp'] = pd.to_datetime(df['created_at'], format='ISO8601', utc=False)
+        # If that still converts, manually parse to avoid timezone inference
+        if df['timestamp'].dt.tz is not None:
+            # Remove timezone info if pandas added it
+            df['timestamp'] = df['timestamp'].dt.tz_localize(None)
         df = df.set_index('timestamp')
         df = df.sort_index()
         
