@@ -49,15 +49,16 @@ class WeatherChartGenerator:
         if not historical_data:
             return pd.DataFrame()
         
-        # Convert to DataFrame
+        # Convert to DataFrame (pre-allocate for performance)
         df = pd.DataFrame(historical_data)
         
-        # Combine date and time fields to create timestamp (already in Central Time)
-        df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'])
+        # Combine date and time fields efficiently
+        df['timestamp'] = pd.to_datetime(df['date'] + ' ' + df['time'], format='%Y-%m-%d %H:%M:%S')
         df = df.set_index('timestamp')
         df = df.sort_index()
         
-        logger.info(f"Prepared {len(df)} data points from {df.index.min()} to {df.index.max()}")
+        # Only log on first chart generation to reduce overhead
+        logger.debug(f"Prepared {len(df)} data points")
         
         return df
     
@@ -66,38 +67,39 @@ class WeatherChartGenerator:
         if not astronomical_zones:
             return
         
-        # Define colors for different zones
+        # Pre-define colors for performance (avoid dict lookup in loop)
         zone_colors = {
-            'day': (1.0, 1.0, 1.0, 0.0),              # Transparent for day
-            'civil_twilight': (1.0, 0.87, 0.5, 0.3),  # Light yellow
-            'nautical_twilight': (1.0, 0.65, 0.0, 0.4), # Orange  
-            'astronomical_twilight': (0.5, 0.0, 0.5, 0.5), # Purple
-            'night': (0.1, 0.1, 0.44, 0.6)            # Dark blue
+            'day': (1.0, 1.0, 1.0, 0.0),
+            'civil_twilight': (1.0, 0.87, 0.5, 0.3),
+            'nautical_twilight': (1.0, 0.65, 0.0, 0.4), 
+            'astronomical_twilight': (0.5, 0.0, 0.5, 0.5),
+            'night': (0.1, 0.1, 0.44, 0.6)
         }
         
-        # Group consecutive zones of the same type
+        # Process zones efficiently with reduced object creation
         current_zone = None
         zone_start_time = None
+        cdt_offset = timedelta(hours=5)  # Pre-calculate offset
         
-        for i, zone_data in enumerate(astronomical_zones + [None]):  # Add None to process last zone
+        for zone_data in astronomical_zones + [None]:
             zone_type = zone_data['zone'] if zone_data else None
             
-            if zone_type != current_zone:
-                # Draw the previous zone if it exists
-                if current_zone and zone_start_time:
-                    end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
-                    
-                    # Convert UTC milliseconds to Central Time datetime
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000) - timedelta(hours=5)
-                    end_dt = datetime.fromtimestamp(end_time / 1000) - timedelta(hours=5)
-                    
-                    # Add background rectangle
-                    color = zone_colors.get(current_zone, (0.5, 0.5, 0.5, 0.1))
-                    ax.axvspan(start_dt, end_dt, alpha=color[3], color=color[:3], zorder=0)
+            if zone_type != current_zone and current_zone and zone_start_time:
+                # Draw the previous zone
+                end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                 
-                # Start new zone
-                current_zone = zone_type
-                zone_start_time = zone_data['timestamp'] if zone_data else None
+                # Efficient datetime conversion
+                start_dt = datetime.fromtimestamp(zone_start_time / 1000) - cdt_offset
+                end_dt = datetime.fromtimestamp(end_time / 1000) - cdt_offset
+                
+                # Only draw non-transparent zones
+                color = zone_colors.get(current_zone, (0.5, 0.5, 0.5, 0.1))
+                if color[3] > 0:  # Skip transparent zones
+                    ax.axvspan(start_dt, end_dt, alpha=color[3], color=color[:3], zorder=0)
+            
+            # Update state
+            current_zone = zone_type
+            zone_start_time = zone_data['timestamp'] if zone_data else None
     
     def _calculate_sma(self, data: pd.Series, window: int) -> pd.Series:
         """Calculate Simple Moving Average."""

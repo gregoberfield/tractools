@@ -9,6 +9,8 @@ import shutil
 from datetime import datetime
 from config import Config
 from module_manager import ModuleManager
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,17 @@ class ImageStreamerTool:
         self.threads = {}
         self.temp_dir = tempfile.mkdtemp(prefix='image_streamer_')
         self.ffmpeg_path = None
+        
+        # Create HTTP session with connection pooling for efficiency
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=10, pool_maxsize=20)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
         
     def start(self):
         """Start the image streamer service"""
@@ -43,6 +56,18 @@ class ImageStreamerTool:
         self.running = False
         for stream_name in list(self.streams.keys()):
             self.stop_stream(stream_name)
+        
+        # Clean up temporary directory and HTTP session to prevent memory leaks
+        if hasattr(self, 'temp_dir') and os.path.exists(self.temp_dir):
+            try:
+                shutil.rmtree(self.temp_dir)
+                logger.debug(f"Cleaned up temporary directory: {self.temp_dir}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp directory: {e}")
+        
+        # Close HTTP session to free connection pool resources
+        if hasattr(self, 'session'):
+            self.session.close()
             
     def _check_ffmpeg(self):
         """Check if FFmpeg is available and working"""
@@ -209,12 +234,16 @@ class ImageStreamerTool:
                 headers = {
                     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                 }
-                response = requests.get(config['url'], timeout=30, headers=headers)
+                response = self.session.get(config['url'], timeout=30, headers=headers)
                 response.raise_for_status()
                 
-                # Save image
-                with open(image_path, 'wb') as f:
-                    f.write(response.content)
+                # Save image with error handling
+                try:
+                    with open(image_path, 'wb') as f:
+                        f.write(response.content)
+                except IOError as e:
+                    logger.error(f"Failed to save image for {stream_name}: {e}")
+                    continue
                     
                 # Start/restart FFmpeg if needed
                 if not stream_data.get('ffmpeg_process') or stream_data['ffmpeg_process'].poll() is not None:

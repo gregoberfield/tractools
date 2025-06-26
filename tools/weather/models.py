@@ -7,7 +7,7 @@ class WeatherData(db.Model):
     __tablename__ = 'weather_data'
     
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.String(10), nullable=False)
+    date = db.Column(db.String(10), nullable=False, index=True)
     time = db.Column(db.String(15), nullable=False)
     temperature_f = db.Column(db.Float, nullable=False)
     humidity_percent = db.Column(db.Float, nullable=False)
@@ -23,7 +23,12 @@ class WeatherData(db.Model):
     daylight_condition = db.Column(db.String(50), nullable=False)
     roof_close_requested = db.Column(db.Boolean, nullable=False, default=False)
     alert_condition = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Add composite index for efficient date/time queries
+    __table_args__ = (
+        db.Index('idx_date_time', 'date', 'time'),
+    )
     
     def to_dict(self):
         return {

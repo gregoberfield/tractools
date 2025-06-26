@@ -4,15 +4,42 @@ from .models import WeatherData, db
 from .astronomy import AstronomyCalculator
 from .chart_generator import WeatherChartGenerator
 import logging
+import time
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 weather_bp = Blueprint('weather', __name__)
+
+# Simple cache for weather data (TTL: 60 seconds)
+_weather_cache = {}
+_cache_ttl = 60
+
+def _get_cached_weather_data():
+    """Get cached weather data or fetch from database"""
+    current_time = time.time()
+    cache_key = 'latest_weather'
+    
+    # Check if cache is valid
+    if (cache_key in _weather_cache and 
+        current_time - _weather_cache[cache_key]['timestamp'] < _cache_ttl):
+        return _weather_cache[cache_key]['data']
+    
+    # Fetch fresh data
+    latest_weather = WeatherData.query.order_by(WeatherData.created_at.desc()).first()
+    
+    # Cache the result
+    _weather_cache[cache_key] = {
+        'data': latest_weather,
+        'timestamp': current_time
+    }
+    
+    return latest_weather
 
 @weather_bp.route('/status')
 def get_status():
     """Get weather status page"""
     try:
-        latest_weather = WeatherData.query.order_by(WeatherData.created_at.desc()).first()
+        latest_weather = _get_cached_weather_data()
         
         # Get historical data for last 24 hours
         from datetime import datetime, timedelta
@@ -22,17 +49,16 @@ def get_status():
             WeatherData.created_at >= twenty_four_hours_ago
         ).order_by(WeatherData.created_at.desc()).all()
         
-        # Calculate astronomical zones for the time period
+        # Calculate astronomical zones for the time period (with reduced logging)
         astro_calc = AstronomyCalculator()
         astronomical_zones = []
         if historical_data:
             start_time = min(data.created_at for data in historical_data)
             end_time = max(data.created_at for data in historical_data)
-            logger.info(f"Calculating astronomical zones from {start_time} to {end_time}")
             astronomical_zones = astro_calc.calculate_zones_for_timerange(
-                start_time, end_time, interval_minutes=10
+                start_time, end_time, interval_minutes=15  # Reduced frequency for performance
             )
-            logger.info(f"Generated {len(astronomical_zones)} astronomical zone data points")
+            logger.debug(f"Generated {len(astronomical_zones)} astronomical zones")
         
         # Generate charts server-side
         chart_generator = WeatherChartGenerator()
