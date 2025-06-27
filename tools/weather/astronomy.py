@@ -38,16 +38,19 @@ class AstronomyCalculator:
         Calculate the sun's altitude at a given datetime.
         
         Args:
-            dt: Datetime to calculate sun altitude for
+            dt: Datetime to calculate sun altitude for (assumed to be in local time CDT)
             
         Returns:
             Sun altitude in degrees (negative means below horizon)
         """
-        # Convert to UTC if timezone-aware, otherwise assume UTC
-        if dt.tzinfo is not None:
-            dt_utc = dt.astimezone(timezone.utc)
+        # If no timezone info, assume it's local time (CDT) and convert to UTC
+        if dt.tzinfo is None:
+            # Add 5 hours to convert CDT to UTC (CDT = UTC-5)
+            from datetime import timedelta
+            dt_utc = dt + timedelta(hours=5)
+            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
         else:
-            dt_utc = dt.replace(tzinfo=timezone.utc)
+            dt_utc = dt.astimezone(timezone.utc)
         
         time = Time(dt_utc)
         sun = get_sun(time)
