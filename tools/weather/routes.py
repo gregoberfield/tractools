@@ -6,6 +6,7 @@ from .chart_generator import WeatherChartGenerator
 import logging
 import time
 from functools import lru_cache
+from timezone_utils import get_central_now
 
 logger = logging.getLogger(__name__)
 weather_bp = Blueprint('weather', __name__)
@@ -42,9 +43,10 @@ def get_status():
         latest_weather = _get_cached_weather_data()
         
         # Get historical data for last 24 hours based on actual observation time
-        from datetime import datetime, timedelta
-        # Use local time since date/time fields store CDT timestamps
-        twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
+        from datetime import timedelta
+        # Use Central time for 24-hour window calculation
+        twenty_four_hours_ago = get_central_now() - timedelta(hours=24)
+        twenty_four_hours_ago = twenty_four_hours_ago.replace(tzinfo=None)  # Make naive for database query
         current_date = twenty_four_hours_ago.strftime('%Y-%m-%d')
         current_time = twenty_four_hours_ago.strftime('%H:%M:%S')
         
@@ -58,15 +60,12 @@ def get_status():
         astro_calc = AstronomyCalculator()
         astronomical_zones = []
         if historical_data:
-            # Use the actual observation times from date/time fields, convert to UTC for astronomy calc
+            # Use the actual observation times from date/time fields (keep in Central time)
             import pandas as pd
-            from datetime import timedelta
             observation_times = []
             for data in historical_data:
                 obs_time = pd.to_datetime(f"{data.date} {data.time}", format='mixed')
-                # Convert CDT to UTC for astronomy calculations (CDT = UTC-5)
-                obs_time_utc = obs_time + timedelta(hours=5)
-                observation_times.append(obs_time_utc)
+                observation_times.append(obs_time)
             
             start_time = min(observation_times)
             end_time = max(observation_times)

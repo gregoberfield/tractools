@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy.coordinates import EarthLocation, AltAz, get_sun
 from astropy import units as u
 from config import Config
+from timezone_utils import to_utc, to_central
 
 logger = logging.getLogger(__name__)
 
@@ -38,17 +39,13 @@ class AstronomyCalculator:
         Calculate the sun's altitude at a given datetime.
         
         Args:
-            dt: Datetime to calculate sun altitude for (assumed to be in local time CDT)
+            dt: Datetime in Central time (CDT/CST) - naive or timezone-aware
             
         Returns:
             Sun altitude in degrees (negative means below horizon)
         """
-        # Convert to UTC for astropy calculations
-        if dt.tzinfo is None:
-            # Assume input time is already in UTC (timestamps from astronomical zones)
-            dt_utc = dt.replace(tzinfo=timezone.utc)
-        else:
-            dt_utc = dt.astimezone(timezone.utc)
+        # Convert Central time to UTC for astropy calculations
+        dt_utc = to_utc(dt)
         
         time = Time(dt_utc)
         sun = get_sun(time)

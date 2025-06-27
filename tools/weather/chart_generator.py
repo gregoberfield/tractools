@@ -15,6 +15,7 @@ import io
 import base64
 import logging
 from .chart_cache import get_chart_cache
+from timezone_utils import to_central
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,6 @@ class WeatherChartGenerator:
         # Process zones efficiently with reduced object creation
         current_zone = None
         zone_start_time = None
-        cdt_offset = timedelta(hours=5)  # Pre-calculate offset
         
         for zone_data in astronomical_zones + [None]:
             zone_type = zone_data['zone'] if zone_data else None
@@ -89,9 +89,11 @@ class WeatherChartGenerator:
                 if current_zone and zone_start_time:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
-                    # Efficient datetime conversion
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000) - cdt_offset
-                    end_dt = datetime.fromtimestamp(end_time / 1000) - cdt_offset
+                    # Convert UTC timestamps back to Central time for display
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000)
+                    end_dt = datetime.fromtimestamp(end_time / 1000)
+                    start_dt = to_central(start_dt).replace(tzinfo=None)
+                    end_dt = to_central(end_dt).replace(tzinfo=None)
                     
                     # Only draw non-transparent zones
                     color = zone_colors.get(current_zone, (0.5, 0.5, 0.5, 0.1))
