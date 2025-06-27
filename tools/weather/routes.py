@@ -58,12 +58,15 @@ def get_status():
         astro_calc = AstronomyCalculator()
         astronomical_zones = []
         if historical_data:
-            # Use the actual observation times from date/time fields
+            # Use the actual observation times from date/time fields, convert to UTC for astronomy calc
             import pandas as pd
+            from datetime import timedelta
             observation_times = []
             for data in historical_data:
                 obs_time = pd.to_datetime(f"{data.date} {data.time}", format='mixed')
-                observation_times.append(obs_time)
+                # Convert CDT to UTC for astronomy calculations (CDT = UTC-5)
+                obs_time_utc = obs_time + timedelta(hours=5)
+                observation_times.append(obs_time_utc)
             
             start_time = min(observation_times)
             end_time = max(observation_times)

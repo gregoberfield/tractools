@@ -43,12 +43,10 @@ class AstronomyCalculator:
         Returns:
             Sun altitude in degrees (negative means below horizon)
         """
-        # If no timezone info, assume it's local time (CDT) and convert to UTC
+        # Convert to UTC for astropy calculations
         if dt.tzinfo is None:
-            # Add 5 hours to convert CDT to UTC (CDT = UTC-5)
-            from datetime import timedelta
-            dt_utc = dt + timedelta(hours=5)
-            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+            # Assume input time is already in UTC (timestamps from astronomical zones)
+            dt_utc = dt.replace(tzinfo=timezone.utc)
         else:
             dt_utc = dt.astimezone(timezone.utc)
         
