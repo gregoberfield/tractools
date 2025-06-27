@@ -137,7 +137,7 @@ class AstronomyCalculator:
                 'time': current_time,
                 'zone': zone,
                 'color': color,
-                'timestamp': current_time.timestamp() * 1000,  # For JavaScript
+                'timestamp': to_utc(current_time).timestamp() * 1000,  # Convert to UTC first for consistent timestamps
                 'sun_altitude': sun_alt  # For debugging
             })
             

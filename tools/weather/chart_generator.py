@@ -90,8 +90,9 @@ class WeatherChartGenerator:
                     end_time = zone_data['timestamp'] if zone_data else astronomical_zones[-1]['timestamp']
                     
                     # Convert UTC timestamps back to Central time for display
-                    start_dt = datetime.fromtimestamp(zone_start_time / 1000)
-                    end_dt = datetime.fromtimestamp(end_time / 1000)
+                    import zoneinfo
+                    start_dt = datetime.fromtimestamp(zone_start_time / 1000, tz=zoneinfo.ZoneInfo('UTC'))
+                    end_dt = datetime.fromtimestamp(end_time / 1000, tz=zoneinfo.ZoneInfo('UTC'))
                     start_dt = to_central(start_dt).replace(tzinfo=None)
                     end_dt = to_central(end_dt).replace(tzinfo=None)
                     
